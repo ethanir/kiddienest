@@ -48,8 +48,24 @@ export async function authenticate(
     if (error) return { error: error.message };
   }
 
-  // /app routes the user to the right dashboard based on their role.
-  redirect("/app");
+  // Route straight to the right dashboard (no intermediate redirect hop).
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let destination = "/app/parent";
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    if (profile?.role === "staff" || profile?.role === "admin") {
+      destination = "/app/admin";
+    }
+  }
+
+  redirect(destination);
 }
 
 export async function signOut() {

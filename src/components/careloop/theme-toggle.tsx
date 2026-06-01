@@ -3,43 +3,34 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-
 export function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem("careloop-theme");
-    const shouldUseDark = savedTheme === "dark";
-    setIsDark(shouldUseDark);
-    document.documentElement.classList.toggle("dark", shouldUseDark);
+    const saved = window.localStorage.getItem("careloop-theme");
+    const dark = saved
+      ? saved === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setIsDark(dark);
+    document.documentElement.classList.toggle("dark", dark);
   }, []);
 
   function toggleTheme() {
-    const nextValue = !isDark;
-    setIsDark(nextValue);
-    document.documentElement.classList.toggle("dark", nextValue);
-    window.localStorage.setItem("careloop-theme", nextValue ? "dark" : "light");
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    window.localStorage.setItem("careloop-theme", next ? "dark" : "light");
   }
 
   return (
-    <Button
+    <button
       type="button"
-      variant="outline"
       onClick={toggleTheme}
-      className="h-12 rounded-full border-slate-200 bg-white/80 px-5 font-black text-slate-800 shadow-sm hover:bg-white"
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
     >
-      {isDark ? (
-        <>
-          <Sun className="mr-2 size-4" />
-          Light
-        </>
-      ) : (
-        <>
-          <Moon className="mr-2 size-4" />
-          Dark
-        </>
-      )}
-    </Button>
+      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+      {isDark ? "Light" : "Dark"}
+    </button>
   );
 }
