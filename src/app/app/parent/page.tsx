@@ -14,6 +14,9 @@ const cardBase =
 export default async function ParentPage() {
   const supabase = await createClient();
 
+  // Connect this parent to any children they were invited to (no-op if none).
+  await supabase.rpc("claim_guardian_invites");
+
   // Row-Level Security means a parent only receives their own linked children.
   const { data: childRows } = await supabase
     .from("children")
@@ -45,8 +48,9 @@ export default async function ParentPage() {
           </div>
           <h2 className="text-lg font-semibold">No child linked yet</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">
-            Your account isn&apos;t connected to a child profile yet. Once the
-            daycare links your child, their daily updates will show up here.
+            Your account isn&apos;t connected to a child yet. Ask your daycare to invite you with
+            this account&apos;s email — once they do, your child&apos;s daily updates will appear
+            here automatically.
           </p>
         </div>
       </AppShell>

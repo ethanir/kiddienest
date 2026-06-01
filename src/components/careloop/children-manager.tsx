@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   ShieldCheck,
+  Users,
   XCircle,
 } from "lucide-react";
 
@@ -21,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ChildFamilyDialog } from "@/components/careloop/child-family-dialog";
 import { cn } from "@/lib/utils";
 import { createChild, updateChild, type ChildRecord } from "@/app/app/children/actions";
 
@@ -71,6 +73,9 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildRec
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const [familyChild, setFamilyChild] = useState<ChildRecord | null>(null);
+  const [familyOpen, setFamilyOpen] = useState(false);
+
   function openAdd() {
     setEditingId(null);
     setForm(emptyForm);
@@ -93,6 +98,11 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildRec
     });
     setError(null);
     setOpen(true);
+  }
+
+  function openFamily(child: ChildRecord) {
+    setFamilyChild(child);
+    setFamilyOpen(true);
   }
 
   function save() {
@@ -182,14 +192,24 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildRec
                       {child.room || "Unassigned"}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openEdit(child)}
-                    aria-label={`Edit ${child.full_name}`}
-                    className="-mr-1 -mt-1 shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
-                  >
-                    <Pencil className="size-4" />
-                  </button>
+                  <div className="-mr-1 -mt-1 flex shrink-0 gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => openFamily(child)}
+                      aria-label={`Manage ${child.full_name}'s parents`}
+                      className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                    >
+                      <Users className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openEdit(child)}
+                      aria-label={`Edit ${child.full_name}`}
+                      className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -318,6 +338,12 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildRec
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ChildFamilyDialog
+        child={familyChild}
+        open={familyOpen}
+        onOpenChange={(o) => setFamilyOpen(o)}
+      />
     </>
   );
 }
