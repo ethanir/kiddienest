@@ -66,7 +66,7 @@ export function AppShell({
               <Heart className="size-5" />
             </div>
             <div>
-              <p className="text-base font-semibold tracking-tight">CareLoop</p>
+              <p className="text-base font-semibold tracking-tight">KiddieNest</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">Daycare app</p>
             </div>
           </Link>

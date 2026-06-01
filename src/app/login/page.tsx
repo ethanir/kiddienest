@@ -23,7 +23,7 @@ export default function LoginPage() {
             <Heart className="size-5" />
           </div>
           <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            CareLoop
+            KiddieNest
           </span>
         </Link>
 
@@ -33,8 +33,8 @@ export default function LoginPage() {
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {isSignup
-              ? "Set up a CareLoop account to get started."
-              : "Sign in to your CareLoop account."}
+              ? "Set up a KiddieNest account to get started."
+              : "Sign in to your KiddieNest account."}
           </p>
 
           <form action={formAction} className="mt-6 space-y-4">
@@ -95,7 +95,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-5 text-center text-sm text-slate-500 dark:text-slate-400">
-            {isSignup ? "Already have an account?" : "New to CareLoop?"}{" "}
+            {isSignup ? "Already have an account?" : "New to KiddieNest?"}{" "}
             <button
               type="button"
               onClick={() => setMode(isSignup ? "signin" : "signup")}

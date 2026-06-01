@@ -112,7 +112,7 @@ export default function HomePage() {
               <Heart className="size-5" />
             </div>
             <div>
-              <p className="text-lg font-semibold tracking-tight">CareLoop</p>
+              <p className="text-lg font-semibold tracking-tight">KiddieNest</p>
               <p className="text-xs text-slate-500">Childcare updates made simple</p>
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              CareLoop helps childcare centers share check-ins, daily reports, photos,
+              KiddieNest helps childcare centers share check-ins, daily reports, photos,
               forms, messages, menus, learning updates, and incident reports in one
               secure, parent-friendly place.
             </p>

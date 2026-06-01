@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CareLoop — Daycare updates made simple",
+  title: "KiddieNest — Daycare updates made simple",
   description:
-    "CareLoop helps daycare staff and parents stay connected through check-ins, daily reports, photos, messages, forms, and incident reports — in one simple, secure place.",
+    "KiddieNest helps daycare staff and parents stay connected through check-ins, daily reports, photos, messages, forms, and incident reports — in one simple, secure place.",
 };
 
 // Runs before the page paints so the correct theme is applied with no flash.
