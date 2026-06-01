@@ -3,10 +3,12 @@ import { Baby, HeartPulse } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AppShell } from "@/components/careloop/app-shell";
 import { MessageThread } from "@/components/careloop/message-thread";
+import { ParentIncidents } from "@/components/careloop/parent-incidents";
 import {
   ParentTimeline,
   type TimelineUpdate,
 } from "@/components/careloop/parent-live-timeline";
+import { getIncidentsForChild } from "@/app/app/incidents/actions";
 import { createClient } from "@/lib/supabase/server";
 
 const cardBase =
@@ -27,13 +29,18 @@ export default async function ParentPage() {
   const child = childRows?.[0] ?? null;
 
   let updates: TimelineUpdate[] = [];
+  let incidents: Awaited<ReturnType<typeof getIncidentsForChild>> = [];
   if (child) {
-    const { data } = await supabase
-      .from("daily_updates")
-      .select("id, type, title, body, created_at")
-      .eq("child_id", child.id)
-      .order("created_at", { ascending: false });
-    updates = data ?? [];
+    const [{ data: updateRows }, incidentRows] = await Promise.all([
+      supabase
+        .from("daily_updates")
+        .select("id, type, title, body, created_at")
+        .eq("child_id", child.id)
+        .order("created_at", { ascending: false }),
+      getIncidentsForChild(child.id),
+    ]);
+    updates = updateRows ?? [];
+    incidents = incidentRows;
   }
 
   if (!child) {
@@ -110,6 +117,8 @@ export default async function ParentPage() {
             <ParentTimeline updates={updates} />
           </div>
         </div>
+
+        {incidents.length > 0 ? <ParentIncidents initial={incidents} /> : null}
 
         <div className={`${cardBase} flex h-[460px] flex-col p-5 md:p-6`}>
           <div className="mb-1">
