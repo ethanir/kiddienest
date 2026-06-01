@@ -9,6 +9,7 @@ import {
   ImagePlus,
   KeyRound,
   Phone,
+  RotateCcw,
   ShieldCheck,
   UserCheck,
   XCircle,
@@ -69,6 +70,15 @@ export function CheckInBoard() {
     );
   }
 
+  function resetAll() {
+    setChildren((currentChildren) =>
+      currentChildren.map((child) => ({ ...child, liveStatus: "waiting" })),
+    );
+    setSelectedChild((currentChild) =>
+      currentChild ? { ...currentChild, liveStatus: "waiting" } : null,
+    );
+  }
+
   return (
     <>
       <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
@@ -78,13 +88,25 @@ export function CheckInBoard() {
               <div>
                 <h2 className="text-2xl font-black">Children</h2>
                 <p className="careloop-muted text-sm text-slate-500">
-                  Find the child by face, confirm pickup info, then tap one action.
+                  Face first, status second, action last. Nothing is selected until you tap it.
                 </p>
               </div>
 
-              <div className="flex w-fit items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
-                <ImagePlus className="size-4" />
-                Photo upload later
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={resetAll}
+                  className="h-11 rounded-full bg-white px-4 font-black"
+                >
+                  <RotateCcw className="mr-2 size-4" />
+                  Reset all
+                </Button>
+
+                <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
+                  <ImagePlus className="size-4" />
+                  Photo upload later
+                </div>
               </div>
             </div>
 
@@ -110,16 +132,14 @@ export function CheckInBoard() {
                     </button>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-col gap-2">
-                        <div>
-                          <p className="truncate text-lg font-black text-slate-950">
-                            {child.name}
-                          </p>
-                          <p className="text-sm font-medium text-slate-500">
-                            {child.room}
-                          </p>
-                        </div>
+                      <p className="truncate text-lg font-black text-slate-950">
+                        {child.name}
+                      </p>
+                      <p className="text-sm font-medium text-slate-500">
+                        {child.room}
+                      </p>
 
+                      <div className="mt-2">
                         <StatusBadge status={child.liveStatus} />
                       </div>
 
@@ -136,33 +156,46 @@ export function CheckInBoard() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-3 gap-2">
-                    <Button
-                      type="button"
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <StatusButton
+                      label="Check in"
+                      active={child.liveStatus === "checked-in"}
+                      activeClassName="bg-emerald-600 text-white hover:bg-emerald-700"
                       onClick={() => updateStatus(child.name, "checked-in")}
-                      className="h-12 rounded-2xl bg-emerald-600 text-sm font-black hover:bg-emerald-700"
-                    >
-                      In
-                    </Button>
+                    />
 
-                    <Button
-                      type="button"
-                      variant="outline"
+                    <StatusButton
+                      label="Check out"
+                      active={child.liveStatus === "checked-out"}
+                      activeClassName="bg-violet-600 text-white hover:bg-violet-700"
                       onClick={() => updateStatus(child.name, "checked-out")}
-                      className="h-12 rounded-2xl text-sm font-black"
-                    >
-                      Out
-                    </Button>
+                    />
+
+                    <StatusButton
+                      label="Absent"
+                      active={child.liveStatus === "absent"}
+                      activeClassName="bg-slate-800 text-white hover:bg-slate-900"
+                      onClick={() => updateStatus(child.name, "absent")}
+                    />
 
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setSelectedChild(child)}
-                      className="h-12 rounded-2xl text-sm font-black"
+                      onClick={() => updateStatus(child.name, "waiting")}
+                      className="h-12 rounded-2xl bg-white text-sm font-black"
                     >
-                      Details
+                      Reset
                     </Button>
                   </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setSelectedChild(child)}
+                    className="mt-2 h-10 w-full rounded-2xl text-sm font-black text-slate-600"
+                  >
+                    View pickup details
+                  </Button>
                 </article>
               ))}
             </div>
@@ -195,10 +228,10 @@ export function CheckInBoard() {
 
           <Card className="careloop-card rounded-[2rem] border-0 bg-white/85 shadow-xl shadow-slate-200/60">
             <CardContent className="p-6">
-              <h2 className="text-2xl font-black">Design rule</h2>
+              <h2 className="text-2xl font-black">Next build target</h2>
               <p className="careloop-muted mt-2 text-sm leading-6 text-slate-600">
-                The check-in screen should work like a tablet kiosk: child face,
-                clear status, pickup info, then one obvious action.
+                After this, we should make the staff daily report screen interactive:
+                select child, choose meal/nap/photo/note, preview the parent timeline.
               </p>
             </CardContent>
           </Card>
@@ -243,29 +276,27 @@ export function CheckInBoard() {
               </div>
 
               <div className="grid gap-2 sm:grid-cols-4">
-                <Button
-                  className="h-12 rounded-2xl bg-emerald-600 font-black hover:bg-emerald-700"
+                <StatusButton
+                  label="Check in"
+                  active={selectedChild.liveStatus === "checked-in"}
+                  activeClassName="bg-emerald-600 text-white hover:bg-emerald-700"
                   onClick={() => updateStatus(selectedChild.name, "checked-in")}
-                >
-                  Check in
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-12 rounded-2xl font-black"
+                />
+                <StatusButton
+                  label="Check out"
+                  active={selectedChild.liveStatus === "checked-out"}
+                  activeClassName="bg-violet-600 text-white hover:bg-violet-700"
                   onClick={() => updateStatus(selectedChild.name, "checked-out")}
-                >
-                  Check out
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-12 rounded-2xl font-black"
+                />
+                <StatusButton
+                  label="Absent"
+                  active={selectedChild.liveStatus === "absent"}
+                  activeClassName="bg-slate-800 text-white hover:bg-slate-900"
                   onClick={() => updateStatus(selectedChild.name, "absent")}
-                >
-                  Absent
-                </Button>
+                />
                 <Button
                   variant="outline"
-                  className="h-12 rounded-2xl font-black"
+                  className="h-12 rounded-2xl bg-white font-black"
                   onClick={() => updateStatus(selectedChild.name, "waiting")}
                 >
                   Reset
@@ -279,10 +310,35 @@ export function CheckInBoard() {
   );
 }
 
+function StatusButton({
+  label,
+  active,
+  activeClassName,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  activeClassName: string;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant={active ? "default" : "outline"}
+      onClick={onClick}
+      className={`h-12 rounded-2xl text-sm font-black ${
+        active ? activeClassName : "bg-white text-slate-800 hover:bg-slate-50"
+      }`}
+    >
+      {label}
+    </Button>
+  );
+}
+
 function StatusBadge({ status }: { status: AttendanceStatus }) {
   if (status === "checked-in") {
     return (
-      <Badge className="w-fit min-w-[104px] justify-center whitespace-nowrap rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-800 hover:bg-emerald-100">
+      <Badge className="w-fit justify-center whitespace-nowrap rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-800 hover:bg-emerald-100">
         <CheckCircle2 className="mr-1 size-3" />
         Checked in
       </Badge>
@@ -291,7 +347,7 @@ function StatusBadge({ status }: { status: AttendanceStatus }) {
 
   if (status === "checked-out") {
     return (
-      <Badge className="w-fit min-w-[112px] justify-center whitespace-nowrap rounded-full bg-violet-100 px-3 py-1.5 text-xs font-black text-violet-800 hover:bg-violet-100">
+      <Badge className="w-fit justify-center whitespace-nowrap rounded-full bg-violet-100 px-3 py-1.5 text-xs font-black text-violet-800 hover:bg-violet-100">
         <ShieldCheck className="mr-1 size-3" />
         Checked out
       </Badge>
@@ -300,7 +356,7 @@ function StatusBadge({ status }: { status: AttendanceStatus }) {
 
   if (status === "absent") {
     return (
-      <Badge className="w-fit min-w-[86px] justify-center whitespace-nowrap rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-700 hover:bg-slate-100">
+      <Badge className="w-fit justify-center whitespace-nowrap rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-700 hover:bg-slate-100">
         <XCircle className="mr-1 size-3" />
         Absent
       </Badge>
@@ -308,7 +364,7 @@ function StatusBadge({ status }: { status: AttendanceStatus }) {
   }
 
   return (
-    <Badge className="w-fit min-w-[86px] justify-center whitespace-nowrap rounded-full bg-sky-100 px-3 py-1.5 text-xs font-black text-sky-800 hover:bg-sky-100">
+    <Badge className="w-fit justify-center whitespace-nowrap rounded-full bg-sky-100 px-3 py-1.5 text-xs font-black text-sky-800 hover:bg-sky-100">
       <Clock className="mr-1 size-3" />
       Waiting
     </Badge>
