@@ -53,10 +53,7 @@ async function shapeIncidents(
     new Set(rows.map((r) => r.reported_by).filter((v): v is string => Boolean(v))),
   );
 
-  const childById = new Map
-    string,
-    { full_name: string; emoji: string | null; avatar_bg: string | null }
-  >();
+  const childById = new Map<string, { full_name: string; emoji: string | null; avatar_bg: string | null }>();
   if (childIds.length > 0) {
     const { data } = await supabase
       .from("children")
