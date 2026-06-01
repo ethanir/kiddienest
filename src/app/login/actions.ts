@@ -55,6 +55,10 @@ export async function authenticate(
 
   let destination = "/app/parent";
   if (user) {
+    // If an admin invited this email as a teacher, upgrade the role now so the
+    // first redirect lands them on the staff side.
+    await supabase.rpc("claim_staff_invite");
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
