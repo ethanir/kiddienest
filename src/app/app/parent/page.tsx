@@ -2,6 +2,7 @@ import { Baby, HeartPulse } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { AppShell } from "@/components/careloop/app-shell";
+import { MessageThread } from "@/components/careloop/message-thread";
 import {
   ParentTimeline,
   type TimelineUpdate,
@@ -65,47 +66,61 @@ export default async function ParentPage() {
       title={`${firstName}'s day`}
       description="Daily updates, photos, messages, and forms — all in one place."
     >
-      <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className={`${cardBase} h-fit p-6`}>
-          <div className="flex items-center gap-4">
-            <div
-              className="flex h-20 w-20 items-center justify-center rounded-2xl text-4xl"
-              style={{ background: child.avatar_bg }}
-            >
-              {child.emoji}
+      <div className="space-y-5">
+        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className={`${cardBase} h-fit p-6`}>
+            <div className="flex items-center gap-4">
+              <div
+                className="flex h-20 w-20 items-center justify-center rounded-2xl text-4xl"
+                style={{ background: child.avatar_bg }}
+              >
+                {child.emoji}
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold">{child.full_name}</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {child.room || "Classroom not set"}
+                </p>
+                <Badge className="mt-2 rounded-full border-transparent bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  Enrolled
+                </Badge>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-semibold">{child.full_name}</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {child.room || "Classroom not set"}
-              </p>
-              <Badge className="mt-2 rounded-full border-transparent bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                Enrolled
-              </Badge>
+
+            <div className="mt-5 flex items-center gap-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-slate-900">
+                <HeartPulse className="size-5 text-slate-500 dark:text-slate-400" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                  Allergies
+                </p>
+                <p className="font-medium">{child.allergies}</p>
+              </div>
             </div>
           </div>
 
-          <div className="mt-5 flex items-center gap-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-slate-900">
-              <HeartPulse className="size-5 text-slate-500 dark:text-slate-400" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                Allergies
+          <div className={`${cardBase} p-6`}>
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold">Today&apos;s timeline</h2>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Updates from {firstName}&apos;s teachers appear here.
               </p>
-              <p className="font-medium">{child.allergies}</p>
             </div>
+            <ParentTimeline updates={updates} />
           </div>
         </div>
 
-        <div className={`${cardBase} p-6`}>
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold">Today&apos;s timeline</h2>
+        <div className={`${cardBase} flex h-[460px] flex-col p-5 md:p-6`}>
+          <div className="mb-1">
+            <h2 className="text-xl font-semibold">Messages</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Updates from {firstName}&apos;s teachers appear here.
+              Message {firstName}&apos;s teachers directly.
             </p>
           </div>
-          <ParentTimeline updates={updates} />
+          <div className="mt-3 min-h-0 flex-1">
+            <MessageThread childId={child.id} viewerRole="parent" />
+          </div>
         </div>
       </div>
     </AppShell>
