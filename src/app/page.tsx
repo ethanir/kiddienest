@@ -15,9 +15,8 @@ import {
   Milk,
   Moon,
   ShieldCheck,
-  Sparkles,
-  Utensils,
   UsersRound,
+  Utensils,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -103,52 +102,49 @@ const teacherTasks = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[#f7f8fb] text-slate-950">
-      <section className="relative overflow-hidden border-b bg-white">
-        <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-sky-100 blur-3xl" />
-        <div className="absolute right-0 top-32 h-72 w-72 rounded-full bg-amber-100 blur-3xl" />
-
-        <nav className="relative mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <section className="border-b border-slate-200 bg-white">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-sm">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-white">
               <Heart className="size-5" />
             </div>
             <div>
-              <p className="text-lg font-bold tracking-tight">CareLoop</p>
+              <p className="text-lg font-semibold tracking-tight">CareLoop</p>
               <p className="text-xs text-slate-500">Childcare updates made simple</p>
             </div>
           </div>
 
           <div className="hidden items-center gap-7 text-sm font-medium text-slate-600 md:flex">
-            <a href="#features" className="hover:text-slate-950">Features</a>
-            <a href="#demo" className="hover:text-slate-950">Demo</a>
-            <a href="#security" className="hover:text-slate-950">Security</a>
+            <a href="#features" className="transition-colors hover:text-slate-900">Features</a>
+            <a href="#demo" className="transition-colors hover:text-slate-900">Demo</a>
+            <a href="#security" className="transition-colors hover:text-slate-900">Security</a>
           </div>
 
           <Button className="rounded-full px-5">Open demo</Button>
         </nav>
 
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-5 pb-16 pt-8 md:grid-cols-[1.05fr_0.95fr] md:items-center md:pb-24 md:pt-14">
+        <div className="mx-auto grid max-w-7xl gap-10 px-5 pb-16 pt-8 md:grid-cols-[1.05fr_0.95fr] md:items-center md:pb-24 md:pt-14">
           <div>
-            <Badge className="mb-5 rounded-full bg-sky-100 px-4 py-2 text-sky-800 hover:bg-sky-100">
+            <Badge className="mb-5 rounded-full bg-emerald-50 px-4 py-1.5 font-medium text-emerald-700 hover:bg-emerald-50">
               Built for real daycare parents and staff
             </Badge>
 
-            <h1 className="max-w-3xl text-5xl font-bold tracking-tight text-slate-950 md:text-7xl">
+            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-slate-900 md:text-6xl">
               A calm, simple daycare app parents can actually use.
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 md:text-xl">
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
               CareLoop helps childcare centers share check-ins, daily reports, photos,
               forms, messages, menus, learning updates, and incident reports in one
-              secure parent-friendly place.
+              secure, parent-friendly place.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" className="h-13 rounded-full px-7 text-base">
+              <Button size="lg" className="rounded-full px-7 text-base">
                 View product demo
               </Button>
-              <Button size="lg" variant="outline" className="h-13 rounded-full px-7 text-base">
+              <Button size="lg" variant="outline" className="rounded-full px-7 text-base">
                 See feature list
               </Button>
             </div>
@@ -160,39 +156,39 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-sm rounded-[2.5rem] border bg-slate-950 p-3 shadow-2xl">
-            <div className="rounded-[2rem] bg-white p-4">
+          <div className="mx-auto w-full max-w-sm rounded-[2.25rem] border border-slate-200 bg-slate-900 p-3 shadow-lg">
+            <div className="rounded-[1.85rem] bg-white p-4">
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-500">Today</p>
-                  <h2 className="text-xl font-bold">Mia's day</h2>
+                  <h2 className="text-xl font-semibold">Mia's day</h2>
                 </div>
-                <div className="flex size-11 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <div className="flex size-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                   <Baby className="size-5" />
                 </div>
               </div>
 
-              <div className="rounded-3xl bg-sky-50 p-4">
+              <div className="rounded-2xl bg-slate-50 p-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-12 items-center justify-center rounded-2xl bg-white shadow-sm">
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-white">
                     <CheckCircle2 className="size-6 text-emerald-600" />
                   </div>
                   <div>
-                    <p className="font-semibold">Checked in safely</p>
+                    <p className="font-medium">Checked in safely</p>
                     <p className="text-sm text-slate-500">8:12 AM by Ana</p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 space-y-3">
+              <div className="mt-3 space-y-2.5">
                 {parentUpdates.slice(1).map((item) => (
-                  <div key={item.title} className="flex gap-3 rounded-2xl border p-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                      <item.icon className="size-5 text-slate-700" />
+                  <div key={item.title} className="flex gap-3 rounded-xl border border-slate-200 p-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                      <item.icon className="size-5 text-slate-600" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold">{item.title}</p>
+                        <p className="text-sm font-medium">{item.title}</p>
                         <p className="text-xs text-slate-400">{item.time}</p>
                       </div>
                       <p className="text-sm text-slate-500">{item.detail}</p>
@@ -201,7 +197,7 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="mt-3 grid grid-cols-3 gap-2">
                 <QuickAction icon={MessageCircle} label="Message" />
                 <QuickAction icon={CalendarDays} label="Calendar" />
                 <QuickAction icon={FileSignature} label="Forms" />
@@ -213,10 +209,10 @@ export default function HomePage() {
 
       <section id="features" className="mx-auto max-w-7xl px-5 py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <Badge variant="outline" className="rounded-full px-4 py-2">
+          <Badge variant="outline" className="rounded-full px-4 py-1.5 font-medium">
             Version 1 scope
           </Badge>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-5xl">
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
             Focused on what your daycare actually needs first.
           </h2>
           <p className="mt-4 text-lg leading-8 text-slate-600">
@@ -227,15 +223,15 @@ export default function HomePage() {
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {featureGroups.map((group) => (
-            <Card key={group.title} className="rounded-3xl border-0 shadow-sm">
+            <Card key={group.title} className="rounded-2xl border border-slate-200 shadow-none">
               <CardContent className="p-6">
-                <div className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-slate-100">
-                  <group.icon className="size-6 text-slate-800" />
+                <div className="mb-5 flex size-11 items-center justify-center rounded-xl bg-slate-100">
+                  <group.icon className="size-5 text-slate-700" />
                 </div>
-                <h3 className="text-xl font-bold">{group.title}</h3>
+                <h3 className="text-lg font-semibold">{group.title}</h3>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {group.items.map((item) => (
-                    <Badge key={item} variant="secondary" className="rounded-full">
+                    <Badge key={item} variant="secondary" className="rounded-full font-normal">
                       {item}
                     </Badge>
                   ))}
@@ -250,10 +246,10 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-5">
           <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <Badge className="rounded-full bg-emerald-100 px-4 py-2 text-emerald-800 hover:bg-emerald-100">
+              <Badge className="rounded-full bg-emerald-50 px-4 py-1.5 font-medium text-emerald-700 hover:bg-emerald-50">
                 Product preview
               </Badge>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-5xl">
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
                 Three simple views for the real users.
               </h2>
             </div>
@@ -264,22 +260,22 @@ export default function HomePage() {
           </div>
 
           <Tabs defaultValue="parent" className="w-full">
-            <TabsList className="grid h-auto w-full grid-cols-3 rounded-2xl bg-slate-100 p-1">
-              <TabsTrigger value="parent" className="rounded-xl py-3">Parent</TabsTrigger>
-              <TabsTrigger value="admin" className="rounded-xl py-3">Admin</TabsTrigger>
-              <TabsTrigger value="staff" className="rounded-xl py-3">Staff</TabsTrigger>
+            <TabsList variant="line" className="w-full justify-start gap-6">
+              <TabsTrigger value="parent" className="flex-none text-sm">Parent</TabsTrigger>
+              <TabsTrigger value="admin" className="flex-none text-sm">Admin</TabsTrigger>
+              <TabsTrigger value="staff" className="flex-none text-sm">Staff</TabsTrigger>
             </TabsList>
 
             <TabsContent value="parent" className="mt-6">
-              <Card className="rounded-3xl border-0 bg-[#f7f8fb] shadow-sm">
+              <Card className="rounded-2xl border border-slate-200 bg-slate-50 shadow-none">
                 <CardContent className="grid gap-6 p-5 md:grid-cols-[0.85fr_1.15fr] md:p-8">
-                  <div className="rounded-3xl bg-white p-6 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6">
                     <div className="flex items-center gap-4">
-                      <div className="flex size-16 items-center justify-center rounded-3xl bg-pink-100">
-                        <Baby className="size-8 text-pink-700" />
+                      <div className="flex size-16 items-center justify-center rounded-2xl bg-emerald-50">
+                        <Baby className="size-8 text-emerald-600" />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold">Mia Johnson</h3>
+                        <h3 className="text-2xl font-semibold">Mia Johnson</h3>
                         <p className="text-slate-500">Toddler Room • Checked in</p>
                       </div>
                     </div>
@@ -302,14 +298,14 @@ export default function HomePage() {
             </TabsContent>
 
             <TabsContent value="admin" className="mt-6">
-              <Card className="rounded-3xl border-0 bg-[#f7f8fb] shadow-sm">
+              <Card className="rounded-2xl border border-slate-200 bg-slate-50 shadow-none">
                 <CardContent className="p-5 md:p-8">
                   <div className="grid gap-4 md:grid-cols-4">
                     {adminStats.map((stat) => (
-                      <Card key={stat.label} className="rounded-3xl border-0 shadow-sm">
+                      <Card key={stat.label} className="rounded-2xl border border-slate-200 shadow-none">
                         <CardContent className="p-5">
-                          <stat.icon className="mb-4 size-6 text-slate-500" />
-                          <p className="text-3xl font-bold">{stat.value}</p>
+                          <stat.icon className="mb-4 size-5 text-slate-500" />
+                          <p className="text-3xl font-semibold">{stat.value}</p>
                           <p className="text-sm text-slate-500">{stat.label}</p>
                         </CardContent>
                       </Card>
@@ -317,9 +313,9 @@ export default function HomePage() {
                   </div>
 
                   <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                    <Card className="rounded-3xl border-0 shadow-sm">
+                    <Card className="rounded-2xl border border-slate-200 shadow-none">
                       <CardContent className="p-6">
-                        <h3 className="text-xl font-bold">Needs attention</h3>
+                        <h3 className="text-lg font-semibold">Needs attention</h3>
                         <div className="mt-4 space-y-3">
                           <AdminRow icon={FileSignature} title="3 incident reports need parent signature" />
                           <AdminRow icon={Bell} title="2 classrooms have unsent daily reports" />
@@ -328,9 +324,9 @@ export default function HomePage() {
                       </CardContent>
                     </Card>
 
-                    <Card className="rounded-3xl border-0 shadow-sm">
+                    <Card className="rounded-2xl border border-slate-200 shadow-none">
                       <CardContent className="p-6">
-                        <h3 className="text-xl font-bold">Classroom counts</h3>
+                        <h3 className="text-lg font-semibold">Classroom counts</h3>
                         <div className="mt-4 space-y-4">
                           <ProgressRow label="Infants" value="8 / 10" percent="80%" />
                           <ProgressRow label="Toddlers" value="14 / 16" percent="88%" />
@@ -344,13 +340,13 @@ export default function HomePage() {
             </TabsContent>
 
             <TabsContent value="staff" className="mt-6">
-              <Card className="rounded-3xl border-0 bg-[#f7f8fb] shadow-sm">
+              <Card className="rounded-2xl border border-slate-200 bg-slate-50 shadow-none">
                 <CardContent className="grid gap-6 p-5 md:grid-cols-[0.85fr_1.15fr] md:p-8">
-                  <div className="rounded-3xl bg-white p-6 shadow-sm">
-                    <Badge className="rounded-full bg-amber-100 text-amber-800 hover:bg-amber-100">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                    <Badge className="rounded-full bg-slate-100 font-medium text-slate-700 hover:bg-slate-100">
                       Toddler Room
                     </Badge>
-                    <h3 className="mt-4 text-2xl font-bold">Fast daily logging</h3>
+                    <h3 className="mt-4 text-2xl font-semibold">Fast daily logging</h3>
                     <p className="mt-2 text-slate-600">
                       Teachers should be able to update parents in seconds, not fight
                       with confusing forms.
@@ -360,7 +356,7 @@ export default function HomePage() {
                       {teacherTasks.map((task) => (
                         <button
                           key={task.label}
-                          className="flex items-center gap-3 rounded-2xl border bg-white p-4 text-left font-semibold shadow-sm transition hover:bg-slate-50"
+                          className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left text-sm font-medium transition hover:bg-slate-50"
                         >
                           <task.icon className="size-5 text-slate-600" />
                           {task.label}
@@ -369,23 +365,23 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="rounded-3xl bg-white p-6 shadow-sm">
-                    <h3 className="text-xl font-bold">Create update</h3>
-                    <div className="mt-4 rounded-3xl border bg-slate-50 p-4">
-                      <p className="text-sm font-semibold text-slate-500">Selected children</p>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                    <h3 className="text-lg font-semibold">Create update</h3>
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-sm font-medium text-slate-500">Selected children</p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {["Mia", "Noah", "Sofia"].map((name) => (
-                          <Badge key={name} className="rounded-full bg-white text-slate-800 shadow-sm hover:bg-white">
+                          <Badge key={name} className="rounded-full bg-white font-normal text-slate-800 hover:bg-white">
                             {name}
                           </Badge>
                         ))}
                       </div>
-                      <p className="mt-5 text-sm font-semibold text-slate-500">Update</p>
-                      <div className="mt-3 rounded-2xl bg-white p-4 text-slate-600">
+                      <p className="mt-5 text-sm font-medium text-slate-500">Update</p>
+                      <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 text-slate-600">
                         Outdoor play went great today. The class practiced sharing,
                         counting, and cleanup.
                       </div>
-                      <Button className="mt-4 w-full rounded-2xl">Post to parents</Button>
+                      <Button className="mt-4 w-full rounded-xl">Post to parents</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -396,13 +392,13 @@ export default function HomePage() {
       </section>
 
       <section id="security" className="mx-auto max-w-7xl px-5 py-16">
-        <div className="rounded-[2rem] bg-slate-950 p-6 text-white md:p-10">
+        <div className="rounded-3xl bg-slate-900 p-6 text-white md:p-10">
           <div className="grid gap-8 md:grid-cols-[0.9fr_1.1fr] md:items-center">
             <div>
-              <Badge className="rounded-full bg-white/10 px-4 py-2 text-white hover:bg-white/10">
+              <Badge className="rounded-full bg-white/10 px-4 py-1.5 font-medium text-white hover:bg-white/10">
                 Security first
               </Badge>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-5xl">
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
                 Private child data needs serious permissions.
               </h2>
               <p className="mt-4 text-lg leading-8 text-slate-300">
@@ -427,8 +423,8 @@ export default function HomePage() {
 
 function MiniMetric({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-2xl border bg-white p-4 shadow-sm">
-      <p className="text-sm font-bold">{value}</p>
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <p className="text-sm font-medium">{value}</p>
       <p className="mt-1 text-xs text-slate-500">{label}</p>
     </div>
   );
@@ -442,9 +438,9 @@ function QuickAction({
   label: string;
 }) {
   return (
-    <button className="rounded-2xl bg-slate-100 p-3 text-center">
+    <button className="rounded-xl bg-slate-100 p-3 text-center transition hover:bg-slate-200">
       <Icon className="mx-auto mb-1 size-5 text-slate-700" />
-      <span className="text-xs font-semibold">{label}</span>
+      <span className="text-xs font-medium">{label}</span>
     </button>
   );
 }
@@ -461,13 +457,13 @@ function TimelineItem({
   icon: typeof MessageCircle;
 }) {
   return (
-    <div className="flex gap-4 rounded-3xl bg-white p-4 shadow-sm">
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100">
-        <Icon className="size-6 text-slate-700" />
+    <div className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+        <Icon className="size-5 text-slate-600" />
       </div>
       <div>
         <div className="flex flex-wrap items-center gap-x-2">
-          <p className="font-bold">{title}</p>
+          <p className="font-medium">{title}</p>
           <p className="text-sm text-slate-400">{time}</p>
         </div>
         <p className="mt-1 text-sm leading-6 text-slate-600">{detail}</p>
@@ -478,11 +474,11 @@ function TimelineItem({
 
 function InfoTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+    <div className="rounded-xl bg-slate-50 p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
         {label}
       </p>
-      <p className="mt-1 font-bold">{value}</p>
+      <p className="mt-1 font-medium">{value}</p>
     </div>
   );
 }
@@ -495,9 +491,9 @@ function AdminRow({
   title: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-      <Icon className="size-5 text-slate-600" />
-      <p className="font-medium">{title}</p>
+    <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4">
+      <Icon className="size-5 text-slate-500" />
+      <p className="text-sm font-medium">{title}</p>
     </div>
   );
 }
@@ -514,11 +510,11 @@ function ProgressRow({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <p className="font-semibold">{label}</p>
+        <p className="font-medium">{label}</p>
         <p className="text-sm text-slate-500">{value}</p>
       </div>
-      <div className="h-3 rounded-full bg-slate-100">
-        <div className="h-3 rounded-full bg-slate-950" style={{ width: percent }} />
+      <div className="h-2.5 rounded-full bg-slate-100">
+        <div className="h-2.5 rounded-full bg-emerald-500" style={{ width: percent }} />
       </div>
     </div>
   );
@@ -532,9 +528,9 @@ function SecurityItem({
   title: string;
 }) {
   return (
-    <div className="rounded-3xl bg-white/10 p-5">
-      <Icon className="mb-4 size-7 text-white" />
-      <p className="font-bold">{title}</p>
+    <div className="rounded-2xl bg-white/10 p-5">
+      <Icon className="mb-4 size-6 text-white" />
+      <p className="font-medium">{title}</p>
     </div>
   );
 }
