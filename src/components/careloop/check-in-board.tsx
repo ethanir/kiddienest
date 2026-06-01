@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { CountUp } from "@/components/careloop/count-up";
 import { LocalTime } from "@/components/careloop/local-time";
 import { useRealtime } from "@/lib/use-realtime";
 import { cn } from "@/lib/utils";
@@ -153,19 +154,26 @@ export function CheckInBoard({ childProfiles }: { childProfiles: Child[] }) {
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {children.map((child) => {
+          {children.map((child, index) => {
             const isIn = child.attendance_status === "checked_in";
             const isOut = child.attendance_status === "checked_out";
             return (
               <article
                 key={child.id}
+                style={{ animationDelay: `${Math.min(index * 45, 270)}ms` }}
                 className={cn(
-                  "rounded-2xl border bg-white p-4 transition-colors dark:bg-slate-900",
+                  "relative animate-in fade-in-0 slide-in-from-bottom-2 rounded-2xl border bg-white p-4 transition duration-500 [animation-fill-mode:both] dark:bg-slate-900",
                   isIn
                     ? "border-emerald-300 ring-1 ring-emerald-500/20 dark:border-emerald-500/40 dark:ring-emerald-500/20"
                     : "border-slate-200 dark:border-slate-800",
                 )}
               >
+                {isIn ? (
+                  <span className="absolute right-3 top-3 flex size-2.5" aria-hidden="true">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
+                  </span>
+                ) : null}
                 <div className="flex gap-4">
                   <div
                     className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-3xl"
@@ -316,7 +324,9 @@ function MiniStatus({
 
   return (
     <div className={cn("rounded-xl p-4 text-center", tones[tone])}>
-      <p className="text-2xl font-semibold">{value}</p>
+      <p className="text-2xl font-semibold tabular-nums">
+        <CountUp value={value} />
+      </p>
       <p className="mt-1 text-xs font-medium leading-tight">{label}</p>
     </div>
   );

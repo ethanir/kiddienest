@@ -17,6 +17,7 @@ import {
 
 import { AppShell } from "@/components/careloop/app-shell";
 import { Badge } from "@/components/ui/badge";
+import { CountUp } from "@/components/careloop/count-up";
 import { RealtimeRefresh } from "@/components/careloop/realtime-refresh";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -80,10 +81,10 @@ export default async function AdminPage() {
     >
       <RealtimeRefresh subscriptions={[{ table: "children" }, { table: "daily_updates" }]} />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Stat title="Children" value={total} icon={Baby} tone="sky" />
-        <Stat title="Checked in" value={checkedIn} icon={CheckCircle2} tone="emerald" />
-        <Stat title="Not arrived" value={notArrived} icon={Clock} tone="amber" />
-        <Stat title="Absent" value={absent} icon={XCircle} tone="slate" />
+        <Stat title="Children" value={total} icon={Baby} tone="sky" index={0} />
+        <Stat title="Checked in" value={checkedIn} icon={CheckCircle2} tone="emerald" index={1} />
+        <Stat title="Not arrived" value={notArrived} icon={Clock} tone="amber" index={2} />
+        <Stat title="Absent" value={absent} icon={XCircle} tone="slate" index={3} />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
@@ -290,11 +291,13 @@ function Stat({
   value,
   icon: Icon,
   tone,
+  index = 0,
 }: {
   title: string;
   value: number;
   icon: LucideIcon;
   tone: "emerald" | "slate" | "sky" | "amber";
+  index?: number;
 }) {
   const tones = {
     emerald: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
@@ -304,11 +307,16 @@ function Stat({
   };
 
   return (
-    <div className={cn(cardBase, "p-5")}>
+    <div
+      style={{ animationDelay: `${index * 60}ms` }}
+      className={cn(cardBase, "animate-in fade-in-0 slide-in-from-bottom-2 p-5 duration-500 [animation-fill-mode:both]")}
+    >
       <div className={cn("mb-4 flex size-11 items-center justify-center rounded-xl", tones[tone])}>
         <Icon className="size-6" />
       </div>
-      <p className="text-3xl font-semibold tabular-nums">{value}</p>
+      <p className="text-3xl font-semibold tabular-nums">
+        <CountUp value={value} />
+      </p>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{title}</p>
     </div>
   );
