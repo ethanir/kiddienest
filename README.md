@@ -195,7 +195,8 @@ npm run dev
 - 📸 **Photo attachments** on daily updates (Supabase Storage)
 - 📝 **Digital forms and e-signatures** for enrollment and permissions
 - 📱 **Installable PWA** — add KiddieNest to your home screen
-- 🏢 **Multi-daycare support** with per-center billing
+- 💳 **Paid sign-up for daycares** — a monthly subscription provisions a private admin account per daycare (no open self-serve admin registration)
+- 🏢 **Multi-daycare support** — full multi-tenant isolation so each center sees only its own children, staff, and families
 
 ---
 
