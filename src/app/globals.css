@@ -151,3 +151,37 @@ button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* CareLoop dark mode foundation */
+html.dark body {
+  background: #020617;
+}
+
+html.dark .careloop-page {
+  background:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 34rem),
+    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.16), transparent 34rem),
+    #020617;
+  color: #f8fafc;
+}
+
+html.dark .careloop-card {
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .careloop-soft-card {
+  background: rgba(30, 41, 59, 0.8);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .careloop-muted {
+  color: #cbd5e1;
+}
+
+html.dark .careloop-subtle {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+}

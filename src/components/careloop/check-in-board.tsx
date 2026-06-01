@@ -1,0 +1,348 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Fingerprint,
+  ImagePlus,
+  KeyRound,
+  Phone,
+  ShieldCheck,
+  UserCheck,
+  XCircle,
+} from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { children as demoChildren } from "@/lib/demo-data";
+
+type AttendanceStatus = "checked-in" | "waiting" | "checked-out" | "absent";
+
+type Child = (typeof demoChildren)[number] & {
+  liveStatus: AttendanceStatus;
+};
+
+const starterChildren: Child[] = demoChildren.map((child) => ({
+  ...child,
+  liveStatus:
+    child.attendance === "checked-in"
+      ? "checked-in"
+      : child.attendance === "absent"
+        ? "absent"
+        : "waiting",
+}));
+
+export function CheckInBoard() {
+  const [children, setChildren] = useState(starterChildren);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
+
+  const counts = useMemo(() => {
+    return {
+      in: children.filter((child) => child.liveStatus === "checked-in").length,
+      waiting: children.filter((child) => child.liveStatus === "waiting").length,
+      out: children.filter((child) => child.liveStatus === "checked-out").length,
+      absent: children.filter((child) => child.liveStatus === "absent").length,
+    };
+  }, [children]);
+
+  function updateStatus(childName: string, nextStatus: AttendanceStatus) {
+    setChildren((currentChildren) =>
+      currentChildren.map((child) =>
+        child.name === childName ? { ...child, liveStatus: nextStatus } : child,
+      ),
+    );
+
+    setSelectedChild((currentChild) =>
+      currentChild?.name === childName
+        ? { ...currentChild, liveStatus: nextStatus }
+        : currentChild,
+    );
+  }
+
+  return (
+    <>
+      <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card className="careloop-card rounded-[2rem] border-0 bg-white/85 shadow-xl shadow-slate-200/60">
+          <CardContent className="p-5 md:p-6">
+            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-2xl font-black">Children</h2>
+                <p className="careloop-muted text-sm text-slate-500">
+                  Tap a child face to review pickup info, then check in or check out.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
+                <ImagePlus className="size-4" />
+                Photo upload later
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {children.map((child) => (
+                <button
+                  key={child.name}
+                  type="button"
+                  onClick={() => setSelectedChild(child)}
+                  className="group rounded-[2rem] border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.7rem] text-3xl shadow-inner transition group-hover:scale-105"
+                      style={{ background: child.avatarBg }}
+                    >
+                      {child.emoji}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-lg font-black text-slate-950">{child.name}</p>
+                          <p className="text-sm font-medium text-slate-500">{child.room}</p>
+                        </div>
+                        <StatusBadge status={child.liveStatus} />
+                      </div>
+
+                      <p className="mt-3 text-sm text-slate-600">
+                        Pickup: <span className="font-bold text-slate-900">{child.pickup}</span>
+                      </p>
+
+                      <p className="mt-1 text-xs font-bold text-slate-400">
+                        Allergy: {child.allergies}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        updateStatus(child.name, "checked-in");
+                      }}
+                      className="h-12 rounded-2xl bg-emerald-600 font-black hover:bg-emerald-700"
+                    >
+                      Check in
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        updateStatus(child.name, "checked-out");
+                      }}
+                      className="h-12 rounded-2xl font-black"
+                    >
+                      Check out
+                    </Button>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-5">
+          <Card className="rounded-[2rem] border-0 bg-slate-950 text-white shadow-xl shadow-slate-300">
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-black">Today’s status</h2>
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-2">
+                <MiniStatus label="In" value={counts.in.toString()} tone="green" />
+                <MiniStatus label="Waiting" value={counts.waiting.toString()} tone="blue" />
+                <MiniStatus label="Out" value={counts.out.toString()} tone="purple" />
+                <MiniStatus label="Absent" value={counts.absent.toString()} tone="gray" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="careloop-card rounded-[2rem] border-0 bg-white/85 shadow-xl shadow-slate-200/60">
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-black">Safe check-in flow</h2>
+              <div className="mt-5 space-y-3">
+                <Step icon={UserCheck} title="Confirm parent or pickup person" />
+                <Step icon={KeyRound} title="Verify pickup PIN or signature" />
+                <Step icon={Fingerprint} title="Save attendance record" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="careloop-card rounded-[2rem] border-0 bg-white/85 shadow-xl shadow-slate-200/60">
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-black">Why this matters</h2>
+              <p className="careloop-muted mt-2 text-sm leading-6 text-slate-600">
+                The fastest workflow is visual: face, name, status, pickup person, then one tap.
+                This is better for busy staff and easier for parents who are not technical.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Dialog open={Boolean(selectedChild)} onOpenChange={(open) => !open && setSelectedChild(null)}>
+        <DialogContent className="rounded-[2rem] sm:max-w-xl">
+          {selectedChild && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-3xl font-black">
+                  {selectedChild.name}
+                </DialogTitle>
+                <DialogDescription>
+                  Review pickup details before changing attendance.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-2 flex items-center gap-4 rounded-3xl bg-slate-50 p-4">
+                <div
+                  className="flex h-20 w-20 items-center justify-center rounded-[1.7rem] text-4xl"
+                  style={{ background: selectedChild.avatarBg }}
+                >
+                  {selectedChild.emoji}
+                </div>
+                <div>
+                  <StatusBadge status={selectedChild.liveStatus} />
+                  <p className="mt-2 font-black">{selectedChild.room}</p>
+                  <p className="text-sm text-slate-500">{selectedChild.age}</p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <DetailItem icon={Phone} label="Pickup person" value={selectedChild.pickup} />
+                <DetailItem icon={KeyRound} label="Pickup PIN" value="•••• 4821" />
+                <DetailItem icon={AlertTriangle} label="Allergies" value={selectedChild.allergies} />
+                <DetailItem icon={ShieldCheck} label="Authorized" value="Guardian verified" />
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-4">
+                <Button
+                  className="h-12 rounded-2xl bg-emerald-600 font-black hover:bg-emerald-700"
+                  onClick={() => updateStatus(selectedChild.name, "checked-in")}
+                >
+                  Check in
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-12 rounded-2xl font-black"
+                  onClick={() => updateStatus(selectedChild.name, "checked-out")}
+                >
+                  Check out
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-12 rounded-2xl font-black"
+                  onClick={() => updateStatus(selectedChild.name, "absent")}
+                >
+                  Absent
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-12 rounded-2xl font-black"
+                  onClick={() => updateStatus(selectedChild.name, "waiting")}
+                >
+                  Reset
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function StatusBadge({ status }: { status: AttendanceStatus }) {
+  if (status === "checked-in") {
+    return (
+      <Badge className="rounded-full bg-emerald-100 px-3 py-1 font-black text-emerald-800 hover:bg-emerald-100">
+        <CheckCircle2 className="mr-1 size-3" />
+        In
+      </Badge>
+    );
+  }
+
+  if (status === "checked-out") {
+    return (
+      <Badge className="rounded-full bg-violet-100 px-3 py-1 font-black text-violet-800 hover:bg-violet-100">
+        <ShieldCheck className="mr-1 size-3" />
+        Out
+      </Badge>
+    );
+  }
+
+  if (status === "absent") {
+    return (
+      <Badge className="rounded-full bg-slate-100 px-3 py-1 font-black text-slate-700 hover:bg-slate-100">
+        <XCircle className="mr-1 size-3" />
+        Absent
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge className="rounded-full bg-sky-100 px-3 py-1 font-black text-sky-800 hover:bg-sky-100">
+      <Clock className="mr-1 size-3" />
+      Waiting
+    </Badge>
+  );
+}
+
+function MiniStatus({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "green" | "blue" | "gray" | "purple";
+}) {
+  const colors = {
+    green: "bg-emerald-400 text-slate-950",
+    blue: "bg-sky-300 text-slate-950",
+    purple: "bg-violet-300 text-slate-950",
+    gray: "bg-white/10 text-white",
+  };
+
+  return (
+    <div className={`rounded-3xl p-4 text-center ${colors[tone]}`}>
+      <p className="text-3xl font-black">{value}</p>
+      <p className="text-xs font-black">{label}</p>
+    </div>
+  );
+}
+
+function Step({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+  return (
+    <div className="careloop-soft-card flex items-center gap-3 rounded-3xl bg-slate-50 p-4">
+      <div className="flex size-11 items-center justify-center rounded-2xl bg-white shadow-sm">
+        <Icon className="size-6 text-slate-700" />
+      </div>
+      <p className="font-black">{title}</p>
+    </div>
+  );
+}
+
+function DetailItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-3xl border bg-white p-4">
+      <Icon className="mb-3 size-5 text-slate-500" />
+      <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-1 font-black text-slate-900">{value}</p>
+    </div>
+  );
+}

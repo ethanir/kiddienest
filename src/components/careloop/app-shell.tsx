@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/careloop/theme-toggle";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -41,7 +42,7 @@ export function AppShell({
   children: ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50 text-slate-950">
+    <main className="careloop-page min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50 text-slate-950">
       <div className="mx-auto flex max-w-7xl gap-5 px-3 py-3 md:px-5 md:py-5">
         <aside className="sticky top-5 hidden h-[calc(100vh-40px)] w-72 shrink-0 rounded-[2rem] bg-slate-950 p-4 text-white shadow-2xl shadow-slate-200 lg:block">
           <Link href="/" className="mb-6 flex items-center gap-3 rounded-3xl bg-white/10 p-3">
@@ -79,23 +80,26 @@ export function AppShell({
         </aside>
 
         <section className="min-w-0 flex-1 pb-24 lg:pb-0">
-          <header className="mb-5 overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 p-5 shadow-xl shadow-slate-200/70 backdrop-blur md:p-7">
+          <header className="careloop-card mb-5 overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 p-5 shadow-xl shadow-slate-200/70 backdrop-blur md:p-7">
             <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
               <div>
                 <div className="mb-3 flex w-fit items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-sm font-black text-sky-800">
                   <Moon className="size-4" />
                   {role}
                 </div>
-                <h1 className="text-4xl font-black tracking-tight text-slate-950 md:text-6xl">
+                <h1 className="text-4xl font-black tracking-tight md:text-6xl">
                   {title}
                 </h1>
-                <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600 md:text-lg">
+                <p className="careloop-muted mt-3 max-w-2xl text-base leading-7 text-slate-600 md:text-lg">
                   {description}
                 </p>
               </div>
-              <Button className="h-12 rounded-full bg-slate-950 px-6 text-base font-bold text-white hover:bg-slate-800">
-                Demo mode
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <ThemeToggle />
+                <Button className="h-12 rounded-full bg-slate-950 px-6 text-base font-bold text-white hover:bg-slate-800">
+                  Demo mode
+                </Button>
+              </div>
             </div>
           </header>
 
