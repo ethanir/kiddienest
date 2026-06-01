@@ -2,151 +2,188 @@
 
 import { useMemo, useState } from "react";
 import {
-  AlertTriangle,
   CheckCircle2,
   Clock,
-  Fingerprint,
-  ImagePlus,
-  KeyRound,
-  Phone,
+  Loader2,
   RotateCcw,
   ShieldCheck,
-  UserCheck,
   XCircle,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { LocalTime } from "@/components/careloop/local-time";
 import { cn } from "@/lib/utils";
-import { children as demoChildren } from "@/lib/demo-data";
+import {
+  resetAllAttendance,
+  setAttendance,
+  type AttendanceStatus,
+} from "@/app/app/check-in/actions";
 
-type AttendanceStatus = "checked-in" | "waiting" | "checked-out" | "absent";
-
-type Child = (typeof demoChildren)[number] & {
-  liveStatus: AttendanceStatus;
+type Child = {
+  id: string;
+  full_name: string;
+  room: string;
+  emoji: string;
+  avatar_bg: string;
+  allergies: string;
+  attendance_status: AttendanceStatus;
+  checked_in_at: string | null;
+  checked_out_at: string | null;
 };
-
-const starterChildren: Child[] = demoChildren.map((child) => ({
-  ...child,
-  liveStatus:
-    child.attendance === "checked-in"
-      ? "checked-in"
-      : child.attendance === "absent"
-        ? "absent"
-        : "waiting",
-}));
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
-export function CheckInBoard() {
-  const [children, setChildren] = useState(starterChildren);
-  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
+export function CheckInBoard({ childProfiles }: { childProfiles: Child[] }) {
+  const [children, setChildren] = useState<Child[]>(childProfiles);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const counts = useMemo(() => {
-    return {
-      in: children.filter((child) => child.liveStatus === "checked-in").length,
-      waiting: children.filter((child) => child.liveStatus === "waiting").length,
-      out: children.filter((child) => child.liveStatus === "checked-out").length,
-      absent: children.filter((child) => child.liveStatus === "absent").length,
-    };
-  }, [children]);
+  const counts = useMemo(
+    () => ({
+      in: children.filter((c) => c.attendance_status === "checked_in").length,
+      notArrived: children.filter((c) => c.attendance_status === "not_arrived").length,
+      out: children.filter((c) => c.attendance_status === "checked_out").length,
+      absent: children.filter((c) => c.attendance_status === "absent").length,
+    }),
+    [children],
+  );
 
-  function updateStatus(childName: string, nextStatus: AttendanceStatus) {
-    setChildren((currentChildren) =>
-      currentChildren.map((child) =>
-        child.name === childName ? { ...child, liveStatus: nextStatus } : child,
-      ),
-    );
+  async function setStatus(child: Child, next: AttendanceStatus) {
+    setError(null);
+    const now = new Date().toISOString();
+    const patch: Partial<Child> = { attendance_status: next };
+    if (next === "checked_in") {
+      patch.checked_in_at = now;
+      patch.checked_out_at = null;
+    } else if (next === "checked_out") {
+      patch.checked_out_at = now;
+    } else {
+      patch.checked_in_at = null;
+      patch.checked_out_at = null;
+    }
 
-    setSelectedChild((currentChild) =>
-      currentChild?.name === childName
-        ? { ...currentChild, liveStatus: nextStatus }
-        : currentChild,
-    );
+    setChildren((cs) => cs.map((c) => (c.id === child.id ? { ...c, ...patch } : c)));
+
+    const res = await setAttendance(child.id, next);
+    if (res) {
+      setChildren((cs) => cs.map((c) => (c.id === child.id ? child : c)));
+      setError(res.error);
+    }
   }
 
-  function resetAll() {
-    setChildren((currentChildren) =>
-      currentChildren.map((child) => ({ ...child, liveStatus: "waiting" })),
+  async function handleResetAll() {
+    setError(null);
+    setBusy(true);
+    const snapshot = children;
+    setChildren((cs) =>
+      cs.map((c) => ({
+        ...c,
+        attendance_status: "not_arrived" as const,
+        checked_in_at: null,
+        checked_out_at: null,
+      })),
     );
-    setSelectedChild((currentChild) =>
-      currentChild ? { ...currentChild, liveStatus: "waiting" } : null,
+    const res = await resetAllAttendance();
+    setBusy(false);
+    if (res) {
+      setChildren(snapshot);
+      setError(res.error);
+    }
+  }
+
+  if (children.length === 0) {
+    return (
+      <div className={cn(cardBase, "p-8 text-center")}>
+        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
+          <CheckCircle2 className="size-6 text-slate-500 dark:text-slate-400" />
+        </div>
+        <h2 className="text-lg font-semibold">No children yet</h2>
+        <p className="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">
+          Add child profiles first, then you can check children in and out here.
+        </p>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className={cn(cardBase, "p-5 md:p-6")}>
-          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Children</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Face first, status second, action last. Nothing is selected until you tap it.
-              </p>
-            </div>
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <MiniStatus label="Checked in" value={counts.in} tone="green" />
+        <MiniStatus label="Not arrived" value={counts.notArrived} tone="amber" />
+        <MiniStatus label="Checked out" value={counts.out} tone="purple" />
+        <MiniStatus label="Absent" value={counts.absent} tone="gray" />
+      </div>
 
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={resetAll}
-                className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-              >
-                <RotateCcw className="size-4" />
-                Reset all
-              </button>
-
-              <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                <ImagePlus className="size-4" />
-                Photo upload later
-              </div>
-            </div>
+      <div className={cn(cardBase, "p-5 md:p-6")}>
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Children</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Tap a child to check them in, out, or mark absent.
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={handleResetAll}
+            disabled={busy}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            {busy ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <RotateCcw className="size-4" />
+            )}
+            Reset all
+          </button>
+        </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {children.map((child) => (
+        {error ? (
+          <p className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">
+            {error}
+          </p>
+        ) : null}
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {children.map((child) => {
+            const isIn = child.attendance_status === "checked_in";
+            const isOut = child.attendance_status === "checked_out";
+            return (
               <article
-                key={child.name}
-                className="rounded-2xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+                key={child.id}
+                className={cn(
+                  "rounded-2xl border bg-white p-4 transition-colors dark:bg-slate-900",
+                  isIn
+                    ? "border-emerald-300 ring-1 ring-emerald-500/20 dark:border-emerald-500/40 dark:ring-emerald-500/20"
+                    : "border-slate-200 dark:border-slate-800",
+                )}
               >
                 <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedChild(child)}
-                    className="shrink-0 rounded-2xl transition hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 dark:focus-visible:ring-emerald-500/30"
-                    aria-label={`Open ${child.name} details`}
+                  <div
+                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-3xl"
+                    style={{ background: child.avatar_bg }}
                   >
-                    <div
-                      className="flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
-                      style={{ background: child.avatarBg }}
-                    >
-                      {child.emoji}
-                    </div>
-                  </button>
-
+                    {child.emoji}
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-base font-semibold">{child.name}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{child.room}</p>
-
-                    <div className="mt-2">
-                      <StatusBadge status={child.liveStatus} />
-                    </div>
-
-                    <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-                      Pickup:{" "}
-                      <span className="font-medium text-slate-900 dark:text-slate-100">
-                        {child.pickup}
-                      </span>
+                    <p className="truncate text-base font-semibold">{child.full_name}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {child.room || "—"}
                     </p>
-
-                    <p className="mt-1 text-xs font-medium text-slate-400 dark:text-slate-500">
+                    <div className="mt-2">
+                      <StatusBadge status={child.attendance_status} />
+                    </div>
+                    {isIn && child.checked_in_at ? (
+                      <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+                        Checked in at <LocalTime iso={child.checked_in_at} />
+                      </p>
+                    ) : null}
+                    {isOut && child.checked_out_at ? (
+                      <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+                        Checked out at <LocalTime iso={child.checked_out_at} />
+                      </p>
+                    ) : null}
+                    <p className="mt-1.5 text-xs font-medium text-slate-400 dark:text-slate-500">
                       Allergy: {child.allergies}
                     </p>
                   </div>
@@ -155,140 +192,35 @@ export function CheckInBoard() {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <StatusButton
                     label="Check in"
-                    active={child.liveStatus === "checked-in"}
+                    active={isIn}
                     activeClassName="bg-emerald-600 text-white hover:bg-emerald-700"
-                    onClick={() => updateStatus(child.name, "checked-in")}
+                    onClick={() => setStatus(child, "checked_in")}
                   />
                   <StatusButton
                     label="Check out"
-                    active={child.liveStatus === "checked-out"}
+                    active={isOut}
                     activeClassName="bg-violet-600 text-white hover:bg-violet-700"
-                    onClick={() => updateStatus(child.name, "checked-out")}
+                    onClick={() => setStatus(child, "checked_out")}
                   />
                   <StatusButton
                     label="Absent"
-                    active={child.liveStatus === "absent"}
+                    active={child.attendance_status === "absent"}
                     activeClassName="bg-slate-700 text-white hover:bg-slate-800 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-100"
-                    onClick={() => updateStatus(child.name, "absent")}
+                    onClick={() => setStatus(child, "absent")}
                   />
                   <StatusButton
                     label="Reset"
                     active={false}
                     activeClassName=""
-                    onClick={() => updateStatus(child.name, "waiting")}
+                    onClick={() => setStatus(child, "not_arrived")}
                   />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedChild(child)}
-                  className="mt-2 h-10 w-full rounded-xl text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  View pickup details
-                </button>
               </article>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-5">
-          <div className={cn(cardBase, "p-6")}>
-            <h2 className="text-xl font-semibold">Today&apos;s status</h2>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <MiniStatus label="Checked in" value={counts.in.toString()} tone="green" />
-              <MiniStatus label="Waiting" value={counts.waiting.toString()} tone="blue" />
-              <MiniStatus label="Checked out" value={counts.out.toString()} tone="purple" />
-              <MiniStatus label="Absent" value={counts.absent.toString()} tone="gray" />
-            </div>
-          </div>
-
-          <div className={cn(cardBase, "p-6")}>
-            <h2 className="text-xl font-semibold">Safe check-in flow</h2>
-            <div className="mt-5 space-y-3">
-              <Step icon={UserCheck} title="Confirm parent or pickup person" />
-              <Step icon={KeyRound} title="Verify pickup PIN or signature" />
-              <Step icon={Fingerprint} title="Save attendance record" />
-            </div>
-          </div>
-
-          <div className={cn(cardBase, "p-6")}>
-            <h2 className="text-xl font-semibold">Next build target</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-              After this, we should make the staff daily report screen interactive:
-              select child, choose meal/nap/photo/note, preview the parent timeline.
-            </p>
-          </div>
+            );
+          })}
         </div>
       </div>
-
-      <Dialog
-        open={Boolean(selectedChild)}
-        onOpenChange={(open) => !open && setSelectedChild(null)}
-      >
-        <DialogContent className="rounded-2xl sm:max-w-xl">
-          {selectedChild && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-semibold">
-                  {selectedChild.name}
-                </DialogTitle>
-                <DialogDescription>
-                  Review pickup details before changing attendance.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="mt-2 flex items-center gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
-                <div
-                  className="flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
-                  style={{ background: selectedChild.avatarBg }}
-                >
-                  {selectedChild.emoji}
-                </div>
-                <div>
-                  <StatusBadge status={selectedChild.liveStatus} />
-                  <p className="mt-2 font-medium">{selectedChild.room}</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{selectedChild.age}</p>
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <DetailItem icon={Phone} label="Pickup person" value={selectedChild.pickup} />
-                <DetailItem icon={KeyRound} label="Pickup PIN" value="•••• 4821" />
-                <DetailItem icon={AlertTriangle} label="Allergies" value={selectedChild.allergies} />
-                <DetailItem icon={ShieldCheck} label="Authorized" value="Guardian verified" />
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-4">
-                <StatusButton
-                  label="Check in"
-                  active={selectedChild.liveStatus === "checked-in"}
-                  activeClassName="bg-emerald-600 text-white hover:bg-emerald-700"
-                  onClick={() => updateStatus(selectedChild.name, "checked-in")}
-                />
-                <StatusButton
-                  label="Check out"
-                  active={selectedChild.liveStatus === "checked-out"}
-                  activeClassName="bg-violet-600 text-white hover:bg-violet-700"
-                  onClick={() => updateStatus(selectedChild.name, "checked-out")}
-                />
-                <StatusButton
-                  label="Absent"
-                  active={selectedChild.liveStatus === "absent"}
-                  activeClassName="bg-slate-700 text-white hover:bg-slate-800 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-100"
-                  onClick={() => updateStatus(selectedChild.name, "absent")}
-                />
-                <StatusButton
-                  label="Reset"
-                  active={false}
-                  activeClassName=""
-                  onClick={() => updateStatus(selectedChild.name, "waiting")}
-                />
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+    </div>
   );
 }
 
@@ -321,12 +253,12 @@ function StatusButton({
 
 function StatusBadge({ status }: { status: AttendanceStatus }) {
   const map = {
-    "checked-in": {
+    checked_in: {
       icon: CheckCircle2,
       label: "Checked in",
       cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
     },
-    "checked-out": {
+    checked_out: {
       icon: ShieldCheck,
       label: "Checked out",
       cls: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400",
@@ -336,10 +268,10 @@ function StatusBadge({ status }: { status: AttendanceStatus }) {
       label: "Absent",
       cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
     },
-    waiting: {
+    not_arrived: {
       icon: Clock,
-      label: "Waiting",
-      cls: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+      label: "Not arrived",
+      cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
     },
   } as const;
 
@@ -364,12 +296,12 @@ function MiniStatus({
   tone,
 }: {
   label: string;
-  value: string;
-  tone: "green" | "blue" | "gray" | "purple";
+  value: number;
+  tone: "green" | "amber" | "gray" | "purple";
 }) {
   const tones = {
     green: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
-    blue: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+    amber: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
     purple: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400",
     gray: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
   };
@@ -378,37 +310,6 @@ function MiniStatus({
     <div className={cn("rounded-xl p-4 text-center", tones[tone])}>
       <p className="text-2xl font-semibold">{value}</p>
       <p className="mt-1 text-xs font-medium leading-tight">{label}</p>
-    </div>
-  );
-}
-
-function Step({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
-      <div className="flex size-10 items-center justify-center rounded-lg bg-white dark:bg-slate-900">
-        <Icon className="size-5 text-slate-600 dark:text-slate-300" />
-      </div>
-      <p className="text-sm font-medium">{title}</p>
-    </div>
-  );
-}
-
-function DetailItem({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <Icon className="mb-2 size-5 text-slate-400 dark:text-slate-500" />
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 font-medium">{value}</p>
     </div>
   );
 }
