@@ -16,8 +16,6 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { children as demoChildren } from "@/lib/demo-data";
 
 type AttendanceStatus = "checked-in" | "waiting" | "checked-out" | "absent";
@@ -42,6 +41,9 @@ const starterChildren: Child[] = demoChildren.map((child) => ({
         ? "absent"
         : "waiting",
 }));
+
+const cardBase =
+  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
 export function CheckInBoard() {
   const [children, setChildren] = useState(starterChildren);
@@ -82,159 +84,140 @@ export function CheckInBoard() {
   return (
     <>
       <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="careloop-card rounded-[2rem] border-0 bg-white/85 shadow-xl shadow-slate-200/60">
-          <CardContent className="p-5 md:p-6">
-            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-2xl font-black">Children</h2>
-                <p className="careloop-muted text-sm text-slate-500">
-                  Face first, status second, action last. Nothing is selected until you tap it.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={resetAll}
-                  className="h-11 rounded-full bg-white px-4 font-black"
-                >
-                  <RotateCcw className="mr-2 size-4" />
-                  Reset all
-                </Button>
-
-                <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
-                  <ImagePlus className="size-4" />
-                  Photo upload later
-                </div>
-              </div>
+        <div className={cn(cardBase, "p-5 md:p-6")}>
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Children</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Face first, status second, action last. Nothing is selected until you tap it.
+              </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              {children.map((child) => (
-                <article
-                  key={child.name}
-                  className="rounded-[2rem] border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-                >
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedChild(child)}
-                      className="shrink-0 rounded-[1.7rem] transition hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200"
-                      aria-label={`Open ${child.name} details`}
-                    >
-                      <div
-                        className="flex h-20 w-20 items-center justify-center rounded-[1.7rem] text-3xl shadow-inner"
-                        style={{ background: child.avatarBg }}
-                      >
-                        {child.emoji}
-                      </div>
-                    </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={resetAll}
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                <RotateCcw className="size-4" />
+                Reset all
+              </button>
 
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-lg font-black text-slate-950">
-                        {child.name}
-                      </p>
-                      <p className="text-sm font-medium text-slate-500">
-                        {child.room}
-                      </p>
+              <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                <ImagePlus className="size-4" />
+                Photo upload later
+              </div>
+            </div>
+          </div>
 
-                      <div className="mt-2">
-                        <StatusBadge status={child.liveStatus} />
-                      </div>
-
-                      <p className="mt-3 text-sm text-slate-600">
-                        Pickup:{" "}
-                        <span className="font-bold text-slate-900">
-                          {child.pickup}
-                        </span>
-                      </p>
-
-                      <p className="mt-1 text-xs font-bold text-slate-400">
-                        Allergy: {child.allergies}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <StatusButton
-                      label="Check in"
-                      active={child.liveStatus === "checked-in"}
-                      activeClassName="bg-emerald-600 text-white hover:bg-emerald-700"
-                      onClick={() => updateStatus(child.name, "checked-in")}
-                    />
-
-                    <StatusButton
-                      label="Check out"
-                      active={child.liveStatus === "checked-out"}
-                      activeClassName="bg-violet-600 text-white hover:bg-violet-700"
-                      onClick={() => updateStatus(child.name, "checked-out")}
-                    />
-
-                    <StatusButton
-                      label="Absent"
-                      active={child.liveStatus === "absent"}
-                      activeClassName="bg-slate-800 text-white hover:bg-slate-900"
-                      onClick={() => updateStatus(child.name, "absent")}
-                    />
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => updateStatus(child.name, "waiting")}
-                      className="h-12 rounded-2xl bg-white text-sm font-black"
-                    >
-                      Reset
-                    </Button>
-                  </div>
-
-                  <Button
+          <div className="grid gap-4 sm:grid-cols-2">
+            {children.map((child) => (
+              <article
+                key={child.name}
+                className="rounded-2xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+              >
+                <div className="flex gap-4">
+                  <button
                     type="button"
-                    variant="ghost"
                     onClick={() => setSelectedChild(child)}
-                    className="mt-2 h-10 w-full rounded-2xl text-sm font-black text-slate-600"
+                    className="shrink-0 rounded-2xl transition hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 dark:focus-visible:ring-emerald-500/30"
+                    aria-label={`Open ${child.name} details`}
                   >
-                    View pickup details
-                  </Button>
-                </article>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                    <div
+                      className="flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
+                      style={{ background: child.avatarBg }}
+                    >
+                      {child.emoji}
+                    </div>
+                  </button>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-semibold">{child.name}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{child.room}</p>
+
+                    <div className="mt-2">
+                      <StatusBadge status={child.liveStatus} />
+                    </div>
+
+                    <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                      Pickup:{" "}
+                      <span className="font-medium text-slate-900 dark:text-slate-100">
+                        {child.pickup}
+                      </span>
+                    </p>
+
+                    <p className="mt-1 text-xs font-medium text-slate-400 dark:text-slate-500">
+                      Allergy: {child.allergies}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <StatusButton
+                    label="Check in"
+                    active={child.liveStatus === "checked-in"}
+                    activeClassName="bg-emerald-600 text-white hover:bg-emerald-700"
+                    onClick={() => updateStatus(child.name, "checked-in")}
+                  />
+                  <StatusButton
+                    label="Check out"
+                    active={child.liveStatus === "checked-out"}
+                    activeClassName="bg-violet-600 text-white hover:bg-violet-700"
+                    onClick={() => updateStatus(child.name, "checked-out")}
+                  />
+                  <StatusButton
+                    label="Absent"
+                    active={child.liveStatus === "absent"}
+                    activeClassName="bg-slate-700 text-white hover:bg-slate-800 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-100"
+                    onClick={() => updateStatus(child.name, "absent")}
+                  />
+                  <StatusButton
+                    label="Reset"
+                    active={false}
+                    activeClassName=""
+                    onClick={() => updateStatus(child.name, "waiting")}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedChild(child)}
+                  className="mt-2 h-10 w-full rounded-xl text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  View pickup details
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
 
         <div className="space-y-5">
-          <Card className="rounded-[2rem] border-0 bg-slate-950 text-white shadow-xl shadow-slate-300">
-            <CardContent className="p-6">
-              <h2 className="text-2xl font-black">Today’s status</h2>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <MiniStatus label="Checked in" value={counts.in.toString()} tone="green" />
-                <MiniStatus label="Waiting" value={counts.waiting.toString()} tone="blue" />
-                <MiniStatus label="Checked out" value={counts.out.toString()} tone="purple" />
-                <MiniStatus label="Absent" value={counts.absent.toString()} tone="gray" />
-              </div>
-            </CardContent>
-          </Card>
+          <div className={cn(cardBase, "p-6")}>
+            <h2 className="text-xl font-semibold">Today&apos;s status</h2>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <MiniStatus label="Checked in" value={counts.in.toString()} tone="green" />
+              <MiniStatus label="Waiting" value={counts.waiting.toString()} tone="blue" />
+              <MiniStatus label="Checked out" value={counts.out.toString()} tone="purple" />
+              <MiniStatus label="Absent" value={counts.absent.toString()} tone="gray" />
+            </div>
+          </div>
 
-          <Card className="careloop-card rounded-[2rem] border-0 bg-white/85 shadow-xl shadow-slate-200/60">
-            <CardContent className="p-6">
-              <h2 className="text-2xl font-black">Safe check-in flow</h2>
-              <div className="mt-5 space-y-3">
-                <Step icon={UserCheck} title="Confirm parent or pickup person" />
-                <Step icon={KeyRound} title="Verify pickup PIN or signature" />
-                <Step icon={Fingerprint} title="Save attendance record" />
-              </div>
-            </CardContent>
-          </Card>
+          <div className={cn(cardBase, "p-6")}>
+            <h2 className="text-xl font-semibold">Safe check-in flow</h2>
+            <div className="mt-5 space-y-3">
+              <Step icon={UserCheck} title="Confirm parent or pickup person" />
+              <Step icon={KeyRound} title="Verify pickup PIN or signature" />
+              <Step icon={Fingerprint} title="Save attendance record" />
+            </div>
+          </div>
 
-          <Card className="careloop-card rounded-[2rem] border-0 bg-white/85 shadow-xl shadow-slate-200/60">
-            <CardContent className="p-6">
-              <h2 className="text-2xl font-black">Next build target</h2>
-              <p className="careloop-muted mt-2 text-sm leading-6 text-slate-600">
-                After this, we should make the staff daily report screen interactive:
-                select child, choose meal/nap/photo/note, preview the parent timeline.
-              </p>
-            </CardContent>
-          </Card>
+          <div className={cn(cardBase, "p-6")}>
+            <h2 className="text-xl font-semibold">Next build target</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+              After this, we should make the staff daily report screen interactive:
+              select child, choose meal/nap/photo/note, preview the parent timeline.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -242,11 +225,11 @@ export function CheckInBoard() {
         open={Boolean(selectedChild)}
         onOpenChange={(open) => !open && setSelectedChild(null)}
       >
-        <DialogContent className="rounded-[2rem] sm:max-w-xl">
+        <DialogContent className="rounded-2xl sm:max-w-xl">
           {selectedChild && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-3xl font-black">
+                <DialogTitle className="text-2xl font-semibold">
                   {selectedChild.name}
                 </DialogTitle>
                 <DialogDescription>
@@ -254,17 +237,17 @@ export function CheckInBoard() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-2 flex items-center gap-4 rounded-3xl bg-slate-50 p-4">
+              <div className="mt-2 flex items-center gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
                 <div
-                  className="flex h-20 w-20 items-center justify-center rounded-[1.7rem] text-4xl"
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
                   style={{ background: selectedChild.avatarBg }}
                 >
                   {selectedChild.emoji}
                 </div>
                 <div>
                   <StatusBadge status={selectedChild.liveStatus} />
-                  <p className="mt-2 font-black">{selectedChild.room}</p>
-                  <p className="text-sm text-slate-500">{selectedChild.age}</p>
+                  <p className="mt-2 font-medium">{selectedChild.room}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{selectedChild.age}</p>
                 </div>
               </div>
 
@@ -291,16 +274,15 @@ export function CheckInBoard() {
                 <StatusButton
                   label="Absent"
                   active={selectedChild.liveStatus === "absent"}
-                  activeClassName="bg-slate-800 text-white hover:bg-slate-900"
+                  activeClassName="bg-slate-700 text-white hover:bg-slate-800 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-100"
                   onClick={() => updateStatus(selectedChild.name, "absent")}
                 />
-                <Button
-                  variant="outline"
-                  className="h-12 rounded-2xl bg-white font-black"
+                <StatusButton
+                  label="Reset"
+                  active={false}
+                  activeClassName=""
                   onClick={() => updateStatus(selectedChild.name, "waiting")}
-                >
-                  Reset
-                </Button>
+                />
               </div>
             </>
           )}
@@ -322,51 +304,56 @@ function StatusButton({
   onClick: () => void;
 }) {
   return (
-    <Button
+    <button
       type="button"
-      variant={active ? "default" : "outline"}
       onClick={onClick}
-      className={`h-12 rounded-2xl text-sm font-black ${
-        active ? activeClassName : "bg-white text-slate-800 hover:bg-slate-50"
-      }`}
+      className={cn(
+        "h-12 rounded-xl text-sm font-medium transition-colors",
+        active
+          ? activeClassName
+          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700",
+      )}
     >
       {label}
-    </Button>
+    </button>
   );
 }
 
 function StatusBadge({ status }: { status: AttendanceStatus }) {
-  if (status === "checked-in") {
-    return (
-      <Badge className="w-fit justify-center whitespace-nowrap rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-800 hover:bg-emerald-100">
-        <CheckCircle2 className="mr-1 size-3" />
-        Checked in
-      </Badge>
-    );
-  }
+  const map = {
+    "checked-in": {
+      icon: CheckCircle2,
+      label: "Checked in",
+      cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+    },
+    "checked-out": {
+      icon: ShieldCheck,
+      label: "Checked out",
+      cls: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400",
+    },
+    absent: {
+      icon: XCircle,
+      label: "Absent",
+      cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+    },
+    waiting: {
+      icon: Clock,
+      label: "Waiting",
+      cls: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+    },
+  } as const;
 
-  if (status === "checked-out") {
-    return (
-      <Badge className="w-fit justify-center whitespace-nowrap rounded-full bg-violet-100 px-3 py-1.5 text-xs font-black text-violet-800 hover:bg-violet-100">
-        <ShieldCheck className="mr-1 size-3" />
-        Checked out
-      </Badge>
-    );
-  }
-
-  if (status === "absent") {
-    return (
-      <Badge className="w-fit justify-center whitespace-nowrap rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-700 hover:bg-slate-100">
-        <XCircle className="mr-1 size-3" />
-        Absent
-      </Badge>
-    );
-  }
+  const { icon: Icon, label, cls } = map[status];
 
   return (
-    <Badge className="w-fit justify-center whitespace-nowrap rounded-full bg-sky-100 px-3 py-1.5 text-xs font-black text-sky-800 hover:bg-sky-100">
-      <Clock className="mr-1 size-3" />
-      Waiting
+    <Badge
+      className={cn(
+        "w-fit justify-center gap-1 whitespace-nowrap rounded-full border-transparent px-3 py-1 text-xs font-medium",
+        cls,
+      )}
+    >
+      <Icon className="size-3" />
+      {label}
     </Badge>
   );
 }
@@ -380,28 +367,28 @@ function MiniStatus({
   value: string;
   tone: "green" | "blue" | "gray" | "purple";
 }) {
-  const colors = {
-    green: "bg-emerald-400 text-slate-950",
-    blue: "bg-sky-300 text-slate-950",
-    purple: "bg-violet-300 text-slate-950",
-    gray: "bg-white/10 text-white",
+  const tones = {
+    green: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+    blue: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+    purple: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400",
+    gray: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
   };
 
   return (
-    <div className={`rounded-3xl p-4 text-center ${colors[tone]}`}>
-      <p className="text-3xl font-black">{value}</p>
-      <p className="mt-1 text-xs font-black leading-tight">{label}</p>
+    <div className={cn("rounded-xl p-4 text-center", tones[tone])}>
+      <p className="text-2xl font-semibold">{value}</p>
+      <p className="mt-1 text-xs font-medium leading-tight">{label}</p>
     </div>
   );
 }
 
 function Step({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
-    <div className="careloop-soft-card flex items-center gap-3 rounded-3xl bg-slate-50 p-4">
-      <div className="flex size-11 items-center justify-center rounded-2xl bg-white shadow-sm">
-        <Icon className="size-6 text-slate-700" />
+    <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
+      <div className="flex size-10 items-center justify-center rounded-lg bg-white dark:bg-slate-900">
+        <Icon className="size-5 text-slate-600 dark:text-slate-300" />
       </div>
-      <p className="font-black">{title}</p>
+      <p className="text-sm font-medium">{title}</p>
     </div>
   );
 }
@@ -416,12 +403,12 @@ function DetailItem({
   value: string;
 }) {
   return (
-    <div className="rounded-3xl border bg-white p-4">
-      <Icon className="mb-3 size-5 text-slate-500" />
-      <p className="text-xs font-black uppercase tracking-wide text-slate-400">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+      <Icon className="mb-2 size-5 text-slate-400 dark:text-slate-500" />
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
         {label}
       </p>
-      <p className="mt-1 font-black text-slate-900">{value}</p>
+      <p className="mt-1 font-medium">{value}</p>
     </div>
   );
 }

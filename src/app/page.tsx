@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   Activity,
   AlertTriangle,
@@ -121,7 +123,7 @@ export default function HomePage() {
             <a href="#security" className="transition-colors hover:text-slate-900">Security</a>
           </div>
 
-          <Button className="rounded-full px-5">Open demo</Button>
+          <Button asChild className="rounded-full px-5"><Link href="/app/parent">Open demo</Link></Button>
         </nav>
 
         <div className="mx-auto grid max-w-7xl gap-10 px-5 pb-16 pt-8 md:grid-cols-[1.05fr_0.95fr] md:items-center md:pb-24 md:pt-14">
@@ -141,12 +143,8 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" className="rounded-full px-7 text-base">
-                View product demo
-              </Button>
-              <Button size="lg" variant="outline" className="rounded-full px-7 text-base">
-                See feature list
-              </Button>
+              <Button asChild size="lg" className="rounded-full px-7 text-base"><Link href="/app/parent">View product demo</Link></Button>
+              <Button asChild size="lg" variant="outline" className="rounded-full px-7 text-base"><Link href="#features">See feature list</Link></Button>
             </div>
 
             <div className="mt-8 grid max-w-xl grid-cols-3 gap-3">
