@@ -8,7 +8,9 @@ import {
   Home,
   LayoutDashboard,
   MessageCircle,
+  Moon,
   ShieldAlert,
+  Sparkles,
   UsersRound,
 } from "lucide-react";
 
@@ -39,16 +41,16 @@ export function AppShell({
   children: ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-[#f7f8fb] text-slate-950">
-      <div className="mx-auto flex max-w-7xl gap-5 px-4 py-4 md:py-6">
-        <aside className="sticky top-5 hidden h-[calc(100vh-40px)] w-64 shrink-0 rounded-[2rem] border bg-white p-4 shadow-sm lg:block">
-          <Link href="/" className="mb-6 flex items-center gap-3 px-2">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-slate-950 text-white">
-              <Baby className="size-5" />
+    <main className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50 text-slate-950">
+      <div className="mx-auto flex max-w-7xl gap-5 px-3 py-3 md:px-5 md:py-5">
+        <aside className="sticky top-5 hidden h-[calc(100vh-40px)] w-72 shrink-0 rounded-[2rem] bg-slate-950 p-4 text-white shadow-2xl shadow-slate-200 lg:block">
+          <Link href="/" className="mb-6 flex items-center gap-3 rounded-3xl bg-white/10 p-3">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-300 to-emerald-300 text-slate-950">
+              <Baby className="size-6" />
             </div>
             <div>
-              <p className="font-bold">CareLoop</p>
-              <p className="text-xs text-slate-500">Daycare app</p>
+              <p className="text-lg font-black tracking-tight">CareLoop</p>
+              <p className="text-xs text-slate-300">Daycare app</p>
             </div>
           </Link>
 
@@ -57,26 +59,43 @@ export function AppShell({
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+                className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
               >
-                <item.icon className="size-4" />
+                <item.icon className="size-5" />
                 {item.label}
               </Link>
             ))}
           </nav>
+
+          <div className="absolute inset-x-4 bottom-4 rounded-3xl bg-gradient-to-br from-sky-400 to-emerald-300 p-4 text-slate-950">
+            <div className="mb-3 flex size-10 items-center justify-center rounded-2xl bg-white/70">
+              <Sparkles className="size-5" />
+            </div>
+            <p className="font-black">Simple by design</p>
+            <p className="mt-1 text-xs font-medium text-slate-700">
+              Bigger buttons, clear statuses, and parent-friendly screens.
+            </p>
+          </div>
         </aside>
 
         <section className="min-w-0 flex-1 pb-24 lg:pb-0">
-          <header className="mb-5 rounded-[2rem] border bg-white p-5 shadow-sm md:p-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <header className="mb-5 overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 p-5 shadow-xl shadow-slate-200/70 backdrop-blur md:p-7">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm font-semibold text-sky-700">{role}</p>
-                <h1 className="mt-1 text-3xl font-bold tracking-tight md:text-5xl">
+                <div className="mb-3 flex w-fit items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-sm font-black text-sky-800">
+                  <Moon className="size-4" />
+                  {role}
+                </div>
+                <h1 className="text-4xl font-black tracking-tight text-slate-950 md:text-6xl">
                   {title}
                 </h1>
-                <p className="mt-2 max-w-2xl text-slate-600">{description}</p>
+                <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600 md:text-lg">
+                  {description}
+                </p>
               </div>
-              <Button className="rounded-full">Demo mode</Button>
+              <Button className="h-12 rounded-full bg-slate-950 px-6 text-base font-bold text-white hover:bg-slate-800">
+                Demo mode
+              </Button>
             </div>
           </header>
 
@@ -84,13 +103,13 @@ export function AppShell({
         </section>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t bg-white/95 px-2 py-2 backdrop-blur lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t bg-white/95 px-2 py-2 shadow-2xl backdrop-blur lg:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
           {navItems.slice(1, 6).map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold text-slate-600 hover:bg-slate-100"
+              className="flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-black text-slate-600 hover:bg-sky-50"
             >
               <item.icon className="size-5" />
               {item.label}
