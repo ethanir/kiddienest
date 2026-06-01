@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Loader2, Send } from "lucide-react";
 
 import { LocalTime } from "@/components/careloop/local-time";
+import { useRealtime } from "@/lib/use-realtime";
 import { cn } from "@/lib/utils";
 import { getMessages, sendMessage, type ChatMessage } from "@/app/app/messages/actions";
 
@@ -44,6 +45,11 @@ export function MessageThread({
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, loading]);
 
+  // Live: pull new messages the moment either side sends one.
+  useRealtime([{ table: "messages", filter: `child_id=eq.${childId}` }], () => {
+    getMessages(childId).then((res) => setMessages(res.messages));
+  });
+
   function send() {
     const value = text.trim();
     if (!value || pending) return;
@@ -80,7 +86,7 @@ export function MessageThread({
           messages.map((m) => {
             const mine = m.sender_role === viewerRole;
             return (
-              <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
+              <div key={m.id} className={cn("flex animate-in fade-in-0 slide-in-from-bottom-1 duration-200", mine ? "justify-end" : "justify-start")}>
                 <div
                   className={cn(
                     "max-w-[80%] rounded-2xl px-3.5 py-2",

@@ -17,6 +17,7 @@ import {
 
 import { AppShell } from "@/components/careloop/app-shell";
 import { Badge } from "@/components/ui/badge";
+import { RealtimeRefresh } from "@/components/careloop/realtime-refresh";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,7 @@ export default async function AdminPage() {
       title="Daycare command center"
       description="A live overview of your center — who's here today, the latest activity, and allergies to watch."
     >
+      <RealtimeRefresh subscriptions={[{ table: "children" }, { table: "daily_updates" }]} />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat title="Children" value={total} icon={Baby} tone="sky" />
         <Stat title="Checked in" value={checkedIn} icon={CheckCircle2} tone="emerald" />

@@ -8,6 +8,29 @@ export type AttendanceStatus =
   | "absent"
   | "checked_out";
 
+export type CheckinChild = {
+  id: string;
+  full_name: string;
+  room: string;
+  emoji: string;
+  avatar_bg: string;
+  allergies: string;
+  attendance_status: AttendanceStatus;
+  checked_in_at: string | null;
+  checked_out_at: string | null;
+};
+
+export async function getCheckinRoster(): Promise<CheckinChild[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("children")
+    .select(
+      "id, full_name, room, emoji, avatar_bg, allergies, attendance_status, checked_in_at, checked_out_at",
+    )
+    .order("full_name");
+  return (data ?? []) as CheckinChild[];
+}
+
 export async function setAttendance(
   childId: string,
   status: AttendanceStatus,

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { AppShell } from "@/components/careloop/app-shell";
 import { MessageThread } from "@/components/careloop/message-thread";
 import { ParentIncidents } from "@/components/careloop/parent-incidents";
+import { RealtimeRefresh } from "@/components/careloop/realtime-refresh";
 import {
   ParentTimeline,
   type TimelineUpdate,
@@ -74,6 +75,9 @@ export default async function ParentPage() {
       description="Daily updates, photos, messages, and forms — all in one place."
     >
       <div className="space-y-5">
+        <RealtimeRefresh
+          subscriptions={[{ table: "daily_updates", filter: `child_id=eq.${child.id}` }]}
+        />
         <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <div className={`${cardBase} h-fit p-6`}>
             <div className="flex items-center gap-4">
@@ -118,7 +122,7 @@ export default async function ParentPage() {
           </div>
         </div>
 
-        {incidents.length > 0 ? <ParentIncidents initial={incidents} /> : null}
+        <ParentIncidents childId={child.id} initial={incidents} />
 
         <div className={`${cardBase} flex h-[460px] flex-col p-5 md:p-6`}>
           <div className="mb-1">

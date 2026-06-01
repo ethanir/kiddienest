@@ -12,8 +12,10 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { LocalTime } from "@/components/careloop/local-time";
+import { useRealtime } from "@/lib/use-realtime";
 import { cn } from "@/lib/utils";
 import {
+  getCheckinRoster,
   resetAllAttendance,
   setAttendance,
   type AttendanceStatus,
@@ -48,6 +50,12 @@ export function CheckInBoard({ childProfiles }: { childProfiles: Child[] }) {
     }),
     [children],
   );
+
+  // Live: when any staff member changes attendance, re-fetch so every screen
+  // stays in sync without a manual refresh.
+  useRealtime([{ table: "children" }], () => {
+    getCheckinRoster().then((roster) => setChildren(roster as Child[]));
+  });
 
   async function setStatus(child: Child, next: AttendanceStatus) {
     setError(null);

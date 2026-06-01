@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { LocalTime } from "@/components/careloop/local-time";
 import { SelectField } from "@/components/careloop/select-field";
+import { useRealtime } from "@/lib/use-realtime";
 import { cn } from "@/lib/utils";
-import { createIncident, type IncidentRecord } from "@/app/app/incidents/actions";
+import { createIncident, getIncidents, type IncidentRecord } from "@/app/app/incidents/actions";
 
 type ChildLite = {
   id: string;
@@ -80,6 +81,11 @@ export function IncidentsManager({
   const [form, setForm] = useState<FormState>(() => makeEmpty(children));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // Live: new incidents and parent acknowledgements show up on their own.
+  useRealtime([{ table: "incidents" }], () => {
+    getIncidents().then(setIncidents);
+  });
 
   function openAdd() {
     setForm(makeEmpty(children));
@@ -159,7 +165,7 @@ export function IncidentsManager({
       ) : (
         <div className="space-y-3">
           {incidents.map((i) => (
-            <article key={i.id} className={cn(cardBase, "p-5")}>
+            <article key={i.id} className={cn(cardBase, "animate-in fade-in-0 slide-in-from-bottom-1 p-5 duration-300")}>
               <div className="flex items-start gap-4">
                 <div
                   className="flex size-11 shrink-0 items-center justify-center rounded-xl text-xl"

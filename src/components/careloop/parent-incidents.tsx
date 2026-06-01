@@ -4,8 +4,13 @@ import { useState, useTransition } from "react";
 import { AlertTriangle, Check, Loader2 } from "lucide-react";
 
 import { LocalTime } from "@/components/careloop/local-time";
+import { useRealtime } from "@/lib/use-realtime";
 import { cn } from "@/lib/utils";
-import { acknowledgeIncident, type IncidentRecord } from "@/app/app/incidents/actions";
+import {
+  acknowledgeIncident,
+  getIncidentsForChild,
+  type IncidentRecord,
+} from "@/app/app/incidents/actions";
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
@@ -16,11 +21,22 @@ const severityCls: Record<string, string> = {
   Serious: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
 };
 
-export function ParentIncidents({ initial }: { initial: IncidentRecord[] }) {
+export function ParentIncidents({
+  childId,
+  initial,
+}: {
+  childId: string;
+  initial: IncidentRecord[];
+}) {
   const [incidents, setIncidents] = useState<IncidentRecord[]>(initial);
   const [ackingId, setAckingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  // Live: a newly logged incident appears here on its own.
+  useRealtime([{ table: "incidents", filter: `child_id=eq.${childId}` }], () => {
+    getIncidentsForChild(childId).then(setIncidents);
+  });
 
   const pendingCount = incidents.filter((i) => !i.acknowledged_at).length;
 
@@ -41,8 +57,10 @@ export function ParentIncidents({ initial }: { initial: IncidentRecord[] }) {
     });
   }
 
+  if (incidents.length === 0) return null;
+
   return (
-    <div className={cn(cardBase, "p-5 md:p-6")}>
+    <div className={cn(cardBase, "animate-in fade-in-0 slide-in-from-bottom-1 p-5 duration-300 md:p-6")}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="size-5 text-amber-500" />
