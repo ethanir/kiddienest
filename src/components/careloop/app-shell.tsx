@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,12 +12,15 @@ import {
   Heart,
   Home,
   LayoutDashboard,
+  LogOut,
   MessageCircle,
   ShieldAlert,
   UsersRound,
 } from "lucide-react";
 
 import { ThemeToggle } from "@/components/careloop/theme-toggle";
+import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/app/login/actions";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -44,6 +48,14 @@ export function AppShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email ?? null);
+    });
+  }, []);
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -79,6 +91,29 @@ export function AppShell({
               );
             })}
           </nav>
+
+          <div className="mt-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+            <div className="flex items-center gap-3 px-2">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                {email ? email[0]?.toUpperCase() : "·"}
+              </div>
+              <p
+                className="min-w-0 flex-1 truncate text-sm font-medium"
+                title={email ?? undefined}
+              >
+                {email ?? "Loading…"}
+              </p>
+            </div>
+            <form action={signOut} className="mt-3">
+              <button
+                type="submit"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              >
+                <LogOut className="size-4" />
+                Sign out
+              </button>
+            </form>
+          </div>
         </aside>
 
         <section className="min-w-0 flex-1 pb-24 lg:pb-0">
@@ -92,8 +127,17 @@ export function AppShell({
                 {description}
               </p>
             </div>
-            <div className="shrink-0">
+            <div className="flex shrink-0 items-center gap-2">
               <ThemeToggle />
+              <form action={signOut} className="lg:hidden">
+                <button
+                  type="submit"
+                  aria-label="Sign out"
+                  className="flex size-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <LogOut className="size-5" />
+                </button>
+              </form>
             </div>
           </header>
 

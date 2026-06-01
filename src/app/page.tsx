@@ -123,7 +123,7 @@ export default function HomePage() {
             <a href="#security" className="transition-colors hover:text-slate-900">Security</a>
           </div>
 
-          <Button asChild className="rounded-full px-5"><Link href="/app/parent">Open demo</Link></Button>
+          <Button asChild className="rounded-full px-5"><Link href="/login">Sign in</Link></Button>
         </nav>
 
         <div className="mx-auto grid max-w-7xl gap-10 px-5 pb-16 pt-8 md:grid-cols-[1.05fr_0.95fr] md:items-center md:pb-24 md:pt-14">
@@ -143,7 +143,7 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="rounded-full px-7 text-base"><Link href="/app/parent">View product demo</Link></Button>
+              <Button asChild size="lg" className="rounded-full px-7 text-base"><Link href="/login">Get started</Link></Button>
               <Button asChild size="lg" variant="outline" className="rounded-full px-7 text-base"><Link href="#features">See feature list</Link></Button>
             </div>
 
