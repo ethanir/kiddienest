@@ -10,8 +10,8 @@ import {
   ClipboardList,
   FileSignature,
   Heart,
-  Home,
   LayoutDashboard,
+  Lock,
   LogOut,
   MessageCircle,
   ShieldAlert,
@@ -25,7 +25,6 @@ import { signOut } from "@/app/login/actions";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Home", icon: Home, roles: ["parent", "staff", "admin"] },
   { href: "/app/parent", label: "My child", icon: Baby, roles: ["parent"] },
   { href: "/app/admin", label: "Dashboard", icon: LayoutDashboard, roles: ["staff", "admin"] },
   { href: "/app/check-in", label: "Check-in", icon: CheckCircle2, roles: ["staff", "admin"] },
@@ -60,13 +59,13 @@ export function AppShell({
   }, []);
 
   const visibleNav = navItems.filter((item) => item.roles.includes(userRole ?? "parent"));
-  const mobileNav = visibleNav.filter((item) => item.href !== "/").slice(0, 5);
+  const mobileNav = visibleNav.filter((item) => item.href !== "/app/forms").slice(0, 5);
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <div className="mx-auto flex max-w-7xl gap-6 px-3 py-3 md:px-6 md:py-6">
         <aside className="sticky top-6 hidden h-[calc(100vh-48px)] w-64 shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 lg:flex dark:border-slate-800 dark:bg-slate-900">
-          <Link href="/" className="mb-6 flex items-center gap-3 px-2">
+          <Link href="/app" className="mb-6 flex items-center gap-3 px-2">
             <div className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
               <Heart className="size-5" />
             </div>
@@ -78,6 +77,23 @@ export function AppShell({
 
           <nav className="flex-1 space-y-1">
             {visibleNav.map((item) => {
+              if (item.href === "/app/forms") {
+                return (
+                  <div
+                    key={item.href}
+                    aria-disabled="true"
+                    title="Coming soon"
+                    className="flex cursor-not-allowed select-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 dark:text-slate-600"
+                  >
+                    <item.icon className="size-5 shrink-0" />
+                    <span className="flex-1">{item.label}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+                      <Lock className="size-3" />
+                      Soon
+                    </span>
+                  </div>
+                );
+              }
               const active = pathname === item.href;
               return (
                 <Link
