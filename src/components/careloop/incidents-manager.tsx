@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { LocalTime } from "@/components/careloop/local-time";
+import { SelectField } from "@/components/careloop/select-field";
 import { cn } from "@/lib/utils";
 import { createIncident, type IncidentRecord } from "@/app/app/incidents/actions";
 
@@ -232,45 +233,30 @@ export function IncidentsManager({
 
           <div className="space-y-4 py-1">
             <Field label="Child">
-              <select
+              <SelectField
+                ariaLabel="Child"
                 value={form.childId}
-                onChange={(e) => setForm((f) => ({ ...f, childId: e.target.value }))}
-                className={inputCls}
-              >
-                {children.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.full_name}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(v) => setForm((f) => ({ ...f, childId: v }))}
+                options={children.map((c) => ({ value: c.id, label: c.full_name }))}
+              />
             </Field>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Type">
-                <select
+                <SelectField
+                  ariaLabel="Incident type"
                   value={form.incidentType}
-                  onChange={(e) => setForm((f) => ({ ...f, incidentType: e.target.value }))}
-                  className={inputCls}
-                >
-                  {TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={(v) => setForm((f) => ({ ...f, incidentType: v }))}
+                  options={TYPES.map((t) => ({ value: t, label: t }))}
+                />
               </Field>
               <Field label="Severity">
-                <select
+                <SelectField
+                  ariaLabel="Severity"
                   value={form.severity}
-                  onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value }))}
-                  className={inputCls}
-                >
-                  {SEVERITIES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={(v) => setForm((f) => ({ ...f, severity: v }))}
+                  options={SEVERITIES.map((s) => ({ value: s, label: s }))}
+                />
               </Field>
             </div>
 

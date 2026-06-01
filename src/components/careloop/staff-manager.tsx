@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Mail, Plus, Trash2, UserPlus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { SelectField } from "@/components/careloop/select-field";
 import {
   cancelInvite,
   inviteStaff,
@@ -18,9 +19,6 @@ const cardBase =
 
 const inputCls =
   "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/20";
-
-const smallSelectCls =
-  "h-9 w-28 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900 outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/20";
 
 const roleBadge: Record<string, string> = {
   admin: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400",
@@ -130,14 +128,16 @@ export function StaffManager({
               placeholder="teacher@email.com"
               className={cn(inputCls, "sm:flex-1")}
             />
-            <select
+            <SelectField
+              ariaLabel="Role"
               value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className={cn(inputCls, "sm:w-40")}
-            >
-              <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
-            </select>
+              onValueChange={setRole}
+              options={[
+                { value: "staff", label: "Staff" },
+                { value: "admin", label: "Admin" },
+              ]}
+              className="sm:w-40"
+            />
             <button
               type="button"
               onClick={sendInvite}
@@ -196,15 +196,17 @@ export function StaffManager({
                 </div>
                 {isAdmin && !isSelf ? (
                   <div className="flex items-center gap-2">
-                    <select
+                    <SelectField
+                      ariaLabel={`Role for ${label}`}
+                      size="sm"
                       value={m.role}
-                      onChange={(e) => changeRole(m, e.target.value)}
+                      onValueChange={(v) => changeRole(m, v)}
                       disabled={busyId === m.id}
-                      className={smallSelectCls}
-                    >
-                      <option value="staff">Staff</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                      options={[
+                        { value: "staff", label: "Staff" },
+                        { value: "admin", label: "Admin" },
+                      ]}
+                    />
                     <button
                       type="button"
                       onClick={() => remove(m)}
