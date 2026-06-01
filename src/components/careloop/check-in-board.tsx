@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
   Clock,
@@ -37,10 +37,27 @@ type Child = {
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
+function withStatus(c: Child, next: AttendanceStatus): Child {
+  const now = new Date().toISOString();
+  if (next === "checked_in") {
+    return { ...c, attendance_status: next, checked_in_at: now, checked_out_at: null };
+  }
+  if (next === "checked_out") {
+    return { ...c, attendance_status: next, checked_out_at: now };
+  }
+  return { ...c, attendance_status: next, checked_in_at: null, checked_out_at: null };
+}
+
 export function CheckInBoard({ childProfiles }: { childProfiles: Child[] }) {
   const [children, setChildren] = useState<Child[]>(childProfiles);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Tracks children with an in-flight write so a live re-fetch can't overwrite
+  // a just-tapped status with stale data; the per-child write queue keeps rapid
+  // taps in order so the last tap wins.
+  const pendingRef = useRef<Set<string>>(new Set());
+  const chainRef = useRef<Map<string, Promise<void>>>(new Map());
 
   const counts = useMemo(
     () => ({
@@ -52,38 +69,59 @@ export function CheckInBoard({ childProfiles }: { childProfiles: Child[] }) {
     [children],
   );
 
+  // Merge a fresh roster but keep the local copy of any child mid-write, so a
+  // live update can't revert a status the user just tapped.
+  function mergeRoster(prev: Child[], roster: Child[]): Child[] {
+    return roster.map((r) =>
+      pendingRef.current.has(r.id) ? prev.find((c) => c.id === r.id) ?? r : r,
+    );
+  }
+
   // Live: when any staff member changes attendance, re-fetch so every screen
   // stays in sync without a manual refresh.
   useRealtime([{ table: "children" }], () => {
-    getCheckinRoster().then((roster) => setChildren(roster as Child[]));
+    getCheckinRoster().then((roster) =>
+      setChildren((cs) => mergeRoster(cs, roster as Child[])),
+    );
   });
 
-  async function setStatus(child: Child, next: AttendanceStatus) {
+  function setStatus(child: Child, next: AttendanceStatus) {
     setError(null);
-    const now = new Date().toISOString();
-    const patch: Partial<Child> = { attendance_status: next };
-    if (next === "checked_in") {
-      patch.checked_in_at = now;
-      patch.checked_out_at = null;
-    } else if (next === "checked_out") {
-      patch.checked_out_at = now;
-    } else {
-      patch.checked_in_at = null;
-      patch.checked_out_at = null;
-    }
+    const id = child.id;
 
-    setChildren((cs) => cs.map((c) => (c.id === child.id ? { ...c, ...patch } : c)));
+    // Update the screen instantly.
+    setChildren((cs) => cs.map((c) => (c.id === id ? withStatus(c, next) : c)));
 
-    const res = await setAttendance(child.id, next);
-    if (res) {
-      setChildren((cs) => cs.map((c) => (c.id === child.id ? child : c)));
-      setError(res.error);
-    }
+    // Don't let a live re-fetch clobber this child until its write settles.
+    pendingRef.current.add(id);
+
+    // Queue the write behind any earlier one for this child so taps land in
+    // order and the final tap is what sticks.
+    const prev = chainRef.current.get(id) ?? Promise.resolve();
+    const run: Promise<void> = prev
+      .then(async () => {
+        const res = await setAttendance(id, next);
+        if (res) setError(res.error);
+      })
+      .catch(() => {})
+      .then(() => {
+        // Only the last queued write for this child reconciles + releases.
+        if (chainRef.current.get(id) === run) {
+          chainRef.current.delete(id);
+          pendingRef.current.delete(id);
+          getCheckinRoster().then((roster) =>
+            setChildren((cs) => mergeRoster(cs, roster as Child[])),
+          );
+        }
+      });
+    chainRef.current.set(id, run);
   }
 
   async function handleResetAll() {
     setError(null);
     setBusy(true);
+    pendingRef.current.clear();
+    chainRef.current.clear();
     const snapshot = children;
     setChildren((cs) =>
       cs.map((c) => ({
