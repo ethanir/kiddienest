@@ -24,7 +24,7 @@ export default async function AppIndexPage() {
 
   // Signed up as a daycare owner but hasn't paid yet → finish at billing.
   if (profile?.intended_role === "owner" && !profile?.daycare_id) {
-    redirect("/app/billing");
+    redirect("/app/locked");
   }
 
   redirect("/app/parent");

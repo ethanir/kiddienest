@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 // Builds a Stripe Checkout subscription session for the signed-in user and
 // returns its URL. The daycare is provisioned ONLY by the Stripe webhook after
 // payment succeeds — never before — so abandoning checkout leaves no ghost data.
-async function createCheckoutUrl(): Promise<string> {
+async function buildCheckoutUrl(): Promise<string> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -43,21 +43,21 @@ async function createCheckoutUrl(): Promise<string> {
     },
     subscription_data: { metadata: { userId: user.id } },
     allow_promotion_codes: true,
-    success_url: `${origin}/app/billing?status=success`,
-    cancel_url: `${origin}/app/billing?status=cancel`,
+    success_url: `${origin}/app/locked?status=success`,
+    cancel_url: `${origin}/app/locked?status=cancel`,
   });
 
   if (!session.url) throw new Error("Could not start checkout");
   return session.url;
 }
 
-// Form-action wrapper for the billing page button.
+// Form-action wrapper (redirects straight to Stripe).
 export async function startCheckout() {
-  const url = await createCheckoutUrl();
+  const url = await buildCheckoutUrl();
   redirect(url);
 }
 
-// Reusable variant for the signup flow (returns the URL to redirect to).
+// Returns the URL (used by the signup flow to redirect after creating the account).
 export async function createCheckoutSession(): Promise<string> {
-  return createCheckoutUrl();
+  return buildCheckoutUrl();
 }

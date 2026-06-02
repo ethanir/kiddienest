@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createCheckoutSession } from "@/app/app/billing/actions";
+import { createCheckoutSession } from "@/lib/checkout";
 
 export type AuthState = { error?: string; message?: string } | null;
 
@@ -70,7 +70,7 @@ export async function authenticate(
       claimed?.role !== "staff"
     ) {
       // Mark intent (no access granted) so if they abandon checkout we can route
-      // them back to billing instead of an empty parent portal.
+      // them back to the locked screen instead of an empty parent portal.
       await supabase.rpc("mark_intended_owner");
       const checkoutUrl = await createCheckoutSession();
       redirect(checkoutUrl);

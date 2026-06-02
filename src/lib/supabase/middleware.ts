@@ -93,7 +93,7 @@ export async function updateSession(request: NextRequest) {
   // (Parents are never gated — KiddieNest is free for them.)
   if (user && pathname.startsWith("/app")) {
     const onBilling =
-      pathname === "/app/billing" || pathname.startsWith("/app/billing/");
+      pathname === "/app/locked" || pathname.startsWith("/app/locked/");
     if (!onBilling) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -118,19 +118,19 @@ export async function updateSession(request: NextRequest) {
 
         if (!ok) {
           const url = request.nextUrl.clone();
-          url.pathname = "/app/billing";
+          url.pathname = "/app/locked";
           return NextResponse.redirect(url);
         }
       }
 
-      // Signed up as an owner but never paid (no daycare yet) → finish at billing.
+      // Signed up as an owner but never paid (no daycare yet) → locked screen.
       if (
         profile?.role === "parent" &&
         !profile?.daycare_id &&
         profile?.intended_role === "owner"
       ) {
         const url = request.nextUrl.clone();
-        url.pathname = "/app/billing";
+        url.pathname = "/app/locked";
         return NextResponse.redirect(url);
       }
     }
