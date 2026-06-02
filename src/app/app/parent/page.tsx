@@ -74,12 +74,36 @@ export default async function ParentTodayPage() {
   const [{ data: updateRows }, incidents] = await Promise.all([
     supabase
       .from("daily_updates")
-      .select("id, type, title, body, created_at")
+      .select("id, type, title, body, created_at, photo_path")
       .eq("child_id", child.id)
       .order("created_at", { ascending: false }),
     getIncidentsForChild(child.id),
   ]);
-  const updates: TimelineUpdate[] = updateRows ?? [];
+  const rows = updateRows ?? [];
+
+  // Resolve photos to short-lived signed URLs. createSignedUrls respects the
+  // bucket's RLS, so a parent only ever receives URLs for their own child.
+  const paths = rows
+    .map((r) => r.photo_path)
+    .filter((p): p is string => Boolean(p));
+  const signed = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signedList } = await supabase.storage
+      .from("child-photos")
+      .createSignedUrls(paths, 3600);
+    for (const s of signedList ?? []) {
+      if (s.signedUrl && s.path) signed.set(s.path, s.signedUrl);
+    }
+  }
+
+  const updates: TimelineUpdate[] = rows.map((r) => ({
+    id: r.id,
+    type: r.type,
+    title: r.title,
+    body: r.body,
+    created_at: r.created_at,
+    photo_url: r.photo_path ? (signed.get(r.photo_path) ?? null) : null,
+  }));
   const firstName = child.full_name.split(" ")[0];
 
   return (

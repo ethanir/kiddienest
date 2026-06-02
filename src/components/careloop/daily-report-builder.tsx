@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
@@ -8,11 +8,13 @@ import {
   Camera,
   CheckCircle2,
   ClipboardList,
+  ImageUp,
   Loader2,
   Moon,
   Send,
   Sparkles,
   Utensils,
+  X,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +68,52 @@ export function DailyReportBuilder({ childProfiles }: { childProfiles: Child[] }
     () => reportTypes.find((t) => t.label === selectedTypeLabel) ?? reportTypes[0],
     [selectedTypeLabel],
   );
+
+  const isPhoto = selectedType.label === "Photo";
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoName, setPhotoName] = useState<string | null>(null);
+
+  function clearPhoto() {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setPhotoName(null);
+    setPhotoPreview((url) => {
+      if (url) URL.revokeObjectURL(url);
+      return null;
+    });
+  }
+
+  function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      clearPhoto();
+      return;
+    }
+    setPhotoName(file.name);
+    setPhotoPreview((old) => {
+      if (old) URL.revokeObjectURL(old);
+      return URL.createObjectURL(file);
+    });
+  }
+
+  // Clear the chosen photo after a successful post, and when leaving Photo type.
+  useEffect(() => {
+    if (state?.success) clearPhoto();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.success]);
+
+  useEffect(() => {
+    if (!isPhoto) clearPhoto();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPhoto]);
+
+  // Revoke any object URL on unmount.
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function chooseType(type: ReportType) {
     setSelectedTypeLabel(type.label);
@@ -211,6 +259,16 @@ export function DailyReportBuilder({ childProfiles }: { childProfiles: Child[] }
                 <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
                   {note.trim() || selectedType.defaultNote}
                 </p>
+                {isPhoto && photoPreview ? (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photoPreview}
+                      alt="Selected preview"
+                      className="max-h-56 w-full object-cover"
+                    />
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -221,8 +279,63 @@ export function DailyReportBuilder({ childProfiles }: { childProfiles: Child[] }
           <input type="hidden" name="type" value={selectedType.label} />
           <input type="hidden" name="title" value={selectedType.title} />
 
+          {isPhoto ? (
+            <div className="animate-in fade-in-0 duration-300">
+              <p className="mb-3 mt-5 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                Add photo
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="photo"
+                accept="image/png,image/jpeg,image/webp,image/heic,image/heif"
+                onChange={onPickFile}
+                className="hidden"
+                id="kn-photo-input"
+              />
+              {photoPreview ? (
+                <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photoPreview}
+                    alt="Selected"
+                    className="max-h-72 w-full bg-slate-100 object-cover dark:bg-slate-800"
+                  />
+                  <div className="flex items-center justify-between gap-3 px-3 py-2">
+                    <span className="min-w-0 truncate text-sm text-slate-600 dark:text-slate-300">
+                      {photoName}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={clearPhoto}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    >
+                      <X className="size-4" />
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label
+                  htmlFor="kn-photo-input"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 px-4 py-8 text-center transition-colors hover:border-emerald-400 hover:bg-emerald-50/40 dark:border-slate-700 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-500/5"
+                >
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-pink-50 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400">
+                    <ImageUp className="size-6" />
+                  </span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                    Tap to add a photo
+                  </span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500">
+                    JPG, PNG, WEBP or HEIC · up to 8 MB
+                  </span>
+                </label>
+              )}
+            </div>
+          ) : null}
+
           <p className="mb-3 mt-5 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            3. Write note
+            {isPhoto ? "Caption" : "3. Write note"}
           </p>
           <Textarea
             name="body"

@@ -17,6 +17,7 @@ export type TimelineUpdate = {
   title: string;
   body: string;
   created_at: string;
+  photo_url?: string | null;
 };
 
 const typeStyles: Record<string, string> = {
@@ -82,6 +83,23 @@ export function ParentTimeline({ updates }: { updates: TimelineUpdate[] }) {
                 <LocalTime iso={item.created_at} />
               </p>
             </div>
+
+            {item.photo_url ? (
+              <a
+                href={item.photo_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 block overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.photo_url}
+                  alt={item.title}
+                  loading="lazy"
+                  className="max-h-80 w-full bg-slate-100 object-cover dark:bg-slate-800"
+                />
+              </a>
+            ) : null}
           </div>
         );
       })}
