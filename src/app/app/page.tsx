@@ -14,12 +14,17 @@ export default async function AppIndexPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, intended_role, daycare_id")
     .eq("id", user.id)
     .single();
 
   if (profile?.role === "staff" || profile?.role === "admin") {
     redirect("/app/admin");
+  }
+
+  // Signed up as a daycare owner but hasn't paid yet → finish at billing.
+  if (profile?.intended_role === "owner" && !profile?.daycare_id) {
+    redirect("/app/billing");
   }
 
   redirect("/app/parent");

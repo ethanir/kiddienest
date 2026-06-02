@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createCheckoutSession } from "@/app/app/billing/actions";
 
 export type AuthState = { error?: string; message?: string } | null;
 
@@ -60,16 +61,19 @@ export async function authenticate(
       .maybeSingle();
 
     // Brand-new daycare owner (not already staff/admin via invite/code):
-    // create their pending daycare and send them to checkout.
+    // send them STRAIGHT to Stripe Checkout. The daycare is created only by the
+    // Stripe webhook after payment — so abandoning checkout leaves NO ghost
+    // account/daycare (they remain a bare, role-less signup).
     if (
       accountType === "owner" &&
       claimed?.role !== "admin" &&
       claimed?.role !== "staff"
     ) {
-      const { error: ownerErr } = await supabase.rpc("start_owner_signup", {
-        p_name: fullName,
-      });
-      if (!ownerErr) redirect("/app/billing");
+      // Mark intent (no access granted) so if they abandon checkout we can route
+      // them back to billing instead of an empty parent portal.
+      await supabase.rpc("mark_intended_owner");
+      const checkoutUrl = await createCheckoutSession();
+      redirect(checkoutUrl);
     }
 
     // Owners who already had access (code/invite) → admin area; parents → portal.

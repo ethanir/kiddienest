@@ -6,9 +6,10 @@ import { redirect } from "next/navigation";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 
-// Starts a Stripe Checkout (subscription) for the signed-in user and redirects
-// to Stripe. The webhook provisions their isolated daycare once payment succeeds.
-export async function startCheckout() {
+// Builds a Stripe Checkout subscription session for the signed-in user and
+// returns its URL. The daycare is provisioned ONLY by the Stripe webhook after
+// payment succeeds — never before — so abandoning checkout leaves no ghost data.
+async function createCheckoutUrl(): Promise<string> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -47,5 +48,16 @@ export async function startCheckout() {
   });
 
   if (!session.url) throw new Error("Could not start checkout");
-  redirect(session.url);
+  return session.url;
+}
+
+// Form-action wrapper for the billing page button.
+export async function startCheckout() {
+  const url = await createCheckoutUrl();
+  redirect(url);
+}
+
+// Reusable variant for the signup flow (returns the URL to redirect to).
+export async function createCheckoutSession(): Promise<string> {
+  return createCheckoutUrl();
 }
