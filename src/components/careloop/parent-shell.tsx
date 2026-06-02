@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Baby, Home, LogOut, MessageCircle } from "lucide-react";
 
 import { ThemeToggle } from "@/components/careloop/theme-toggle";
+import { InstallPrompt } from "@/components/careloop/install-prompt";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/app/login/actions";
 import { cn } from "@/lib/utils";
@@ -124,6 +125,8 @@ export function ParentShell({
           })}
         </div>
       </nav>
+
+      <InstallPrompt />
     </div>
   );
 }
