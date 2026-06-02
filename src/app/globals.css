@@ -152,6 +152,28 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Tailwind v4 preflight resets cursor on buttons; restore the pointer for
+   clickable controls so hovering shows the hand. Disabled controls show the
+   not-allowed cursor. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+label[for],
+summary,
+select:not(:disabled),
+[type="submit"]:not(:disabled),
+[type="button"]:not(:disabled),
+[type="reset"]:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+select:disabled,
+[type="submit"]:disabled,
+[type="button"]:disabled {
+  cursor: not-allowed;
+}
+
 /* CareLoop dark mode foundation */
 html.dark body {
   background: #020617;
