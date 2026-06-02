@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { CountUp } from "@/components/careloop/count-up";
 import { RealtimeRefresh } from "@/components/careloop/realtime-refresh";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentRole } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const cardBase =
@@ -45,6 +46,8 @@ type UpdateRow = {
 
 export default async function AdminPage() {
   const supabase = await createClient();
+  const viewerRole = await getCurrentRole();
+  const isAdmin = viewerRole === "admin";
 
   const [{ data: childData }, { data: updateData }] = await Promise.all([
     supabase
@@ -75,9 +78,13 @@ export default async function AdminPage() {
 
   return (
     <AppShell
-      role="Admin dashboard"
+      role={isAdmin ? "Admin dashboard" : "Staff dashboard"}
       title="Daycare command center"
-      description="A live overview of your center — who's here today, the latest activity, and allergies to watch."
+      description={
+        isAdmin
+          ? "A live overview of your center — who's here today, the latest activity, and allergies to watch."
+          : "A live overview of your room — who's here today, the latest activity, and allergies to watch."
+      }
     >
       <RealtimeRefresh subscriptions={[{ table: "children" }, { table: "daily_updates" }]} />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

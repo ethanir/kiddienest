@@ -120,6 +120,12 @@ export function StaffManager({
             <UserPlus className="size-5 text-slate-500 dark:text-slate-400" />
             <h2 className="text-lg font-semibold">Add a teacher</h2>
           </div>
+          <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+            <span className="font-medium text-slate-700 dark:text-slate-300">Staff</span> can check
+            children in/out, post daily updates, and message families.{" "}
+            <span className="font-medium text-slate-700 dark:text-slate-300">Admins</span> can do all
+            that and also manage the team. There&apos;s no extra charge for more teammates or admins.
+          </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <input
               value={email}

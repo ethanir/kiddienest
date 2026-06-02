@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Building2,
   Check,
+  GraduationCap,
   KeyRound,
   Loader2,
   Lock,
@@ -45,7 +46,7 @@ const INCLUDED = [
   "Free for every parent you invite",
 ];
 
-type AccountType = "parent" | "owner";
+type AccountType = "parent" | "staff" | "owner";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -63,6 +64,10 @@ export default function LoginPage() {
     setAccountType("parent");
     setPlanOpen(false);
   }
+  function chooseStaff() {
+    setAccountType("staff");
+    setPlanOpen(false);
+  }
   function chooseOwner() {
     setAccountType("owner");
     setPlanOpen(true);
@@ -72,8 +77,10 @@ export default function LoginPage() {
     setAccountType("parent");
   }
 
-  // The inline form handles sign-in, and parent sign-up. Owner sign-up uses the modal.
-  const showInlineForm = !isSignup || accountType === "parent";
+  // The inline form handles sign-in, plus parent and teacher/staff sign-up.
+  // Daycare-owner sign-up uses the pricing modal instead.
+  const showInlineForm = !isSignup || accountType === "parent" || accountType === "staff";
+  const isStaff = accountType === "staff";
 
   return (
     <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-slate-50 px-4 py-10 dark:bg-slate-950">
@@ -134,20 +141,27 @@ export default function LoginPage() {
 
           {/* role chooser (signup only) */}
           {isSignup ? (
-            <div className="mt-5 grid grid-cols-2 gap-2.5">
+            <div className="mt-5 space-y-2.5">
               <RoleCard
                 active={accountType === "parent"}
                 onClick={chooseParent}
                 icon={<Users className="size-5" />}
                 title="I'm a parent"
-                sub="Free — follow your child"
+                sub="Free — follow your child's day"
+              />
+              <RoleCard
+                active={accountType === "staff"}
+                onClick={chooseStaff}
+                icon={<GraduationCap className="size-5" />}
+                title="I'm a teacher or staff"
+                sub="Join your daycare's team"
               />
               <RoleCard
                 active={accountType === "owner"}
                 onClick={chooseOwner}
                 icon={<Building2 className="size-5" />}
                 title="I run a daycare"
-                sub="Start your workspace"
+                sub="Start your workspace — $59/mo"
               />
             </div>
           ) : null}
@@ -155,7 +169,14 @@ export default function LoginPage() {
           {showInlineForm ? (
             <form action={formAction} className="mt-5 space-y-4">
               <input type="hidden" name="mode" value={mode} />
-              <input type="hidden" name="accountType" value="parent" />
+              <input type="hidden" name="accountType" value={isStaff ? "staff" : "parent"} />
+
+              {isSignup && isStaff ? (
+                <p className="animate-in fade-in-0 rounded-lg bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-700 duration-300 dark:bg-sky-500/10 dark:text-sky-300">
+                  Use the email your daycare invited you with — you&apos;ll get team access
+                  automatically.
+                </p>
+              ) : null}
 
               {isSignup ? (
                 <Field
@@ -225,7 +246,7 @@ export default function LoginPage() {
                   <Loader2 className="size-4 animate-spin" />
                 ) : (
                   <>
-                    {isSignup ? "Create free account" : "Sign in"}
+                    {!isSignup ? "Sign in" : isStaff ? "Create account" : "Create free account"}
                     <ArrowRight className="size-4" />
                   </>
                 )}
@@ -444,19 +465,14 @@ function RoleCard({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`group relative flex flex-col gap-1.5 rounded-xl border p-3.5 text-left transition-all active:scale-[0.99] ${
+      className={`group flex w-full items-center gap-3.5 rounded-xl border p-3.5 text-left transition-all active:scale-[0.99] ${
         active
           ? "border-emerald-500 bg-emerald-50/60 ring-4 ring-emerald-500/10 dark:border-emerald-500/60 dark:bg-emerald-500/10"
           : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
       }`}
     >
-      {active ? (
-        <span className="absolute right-2.5 top-2.5 flex size-4 items-center justify-center rounded-full bg-emerald-600 text-white">
-          <Check className="size-3" strokeWidth={3} />
-        </span>
-      ) : null}
       <span
-        className={`flex size-9 items-center justify-center rounded-lg transition-colors ${
+        className={`flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
           active
             ? "bg-emerald-600 text-white"
             : "bg-slate-100 text-slate-500 group-hover:text-slate-700 dark:bg-slate-700 dark:text-slate-400"
@@ -464,10 +480,21 @@ function RoleCard({
       >
         {icon}
       </span>
-      <span className="mt-0.5 block text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-        {title}
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          {title}
+        </span>
+        <span className="block text-xs text-slate-500 dark:text-slate-400">{sub}</span>
       </span>
-      <span className="block text-xs text-slate-500 dark:text-slate-400">{sub}</span>
+      <span
+        className={`flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
+          active
+            ? "border-emerald-600 bg-emerald-600 text-white"
+            : "border-slate-300 bg-transparent text-transparent dark:border-slate-600"
+        }`}
+      >
+        <Check className="size-3" strokeWidth={3} />
+      </span>
     </button>
   );
 }
