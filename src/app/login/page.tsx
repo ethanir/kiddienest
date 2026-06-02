@@ -17,6 +17,7 @@ import {
   Lock,
   MessageCircle,
   Users,
+  Utensils,
 } from "lucide-react";
 
 import { authenticate, type AuthState } from "./actions";
@@ -59,41 +60,61 @@ export default function LoginPage() {
         <div className="absolute -bottom-40 -right-24 size-[460px] rounded-full bg-sky-200/35 blur-[130px] dark:bg-sky-500/10" />
         <div className="absolute inset-0 opacity-[0.15] dark:opacity-[0.05]" style={dotGrid} />
 
-        {/* floating product chips — echo the landing, calm + alive (desktop only) */}
-        <div className="absolute left-[12%] top-[24%] hidden lg:block">
-          <FloatChip delay="0s">
-            <span className="flex size-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-              <Check className="size-3.5" strokeWidth={3} />
-            </span>
-            <span>
-              <span className="block font-semibold">Mia checked in</span>
-              <span className="block text-slate-400 dark:text-slate-500">8:42 AM</span>
-            </span>
-          </FloatChip>
-        </div>
-
-        <div className="absolute right-[11%] top-[34%] hidden lg:block">
-          <FloatChip delay="1.6s">
-            <span className="flex size-7 items-center justify-center rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
-              <Camera className="size-3.5" />
-            </span>
-            <span>
-              <span className="block font-semibold">New photo</span>
-              <span className="block text-slate-400 dark:text-slate-500">Story time</span>
-            </span>
-          </FloatChip>
-        </div>
-
-        <div className="absolute right-[13%] top-[56%] hidden lg:block">
-          <FloatChip delay="3.1s">
-            <span className="flex size-7 items-center justify-center rounded-full bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
-              <MessageCircle className="size-3.5" />
-            </span>
-            <span>
-              <span className="block font-semibold">Ms. Lee</span>
-              <span className="block text-slate-400 dark:text-slate-500">She had a great day! 💛</span>
-            </span>
-          </FloatChip>
+        {/* grounded product preview — a phone showing the live parent view (desktop only) */}
+        <div className="absolute left-[8%] top-1/2 hidden -translate-y-1/2 lg:block xl:left-[11%]">
+          <div className="kn-float w-[208px]">
+            <div className="rounded-[2rem] border-[5px] border-slate-800 bg-slate-800 p-1.5 shadow-2xl shadow-slate-900/30 dark:border-slate-700 dark:shadow-black/50">
+              <div className="overflow-hidden rounded-[1.6rem] bg-white dark:bg-slate-900">
+                <div className="flex justify-center bg-white pt-2 dark:bg-slate-900">
+                  <span className="h-1.5 w-14 rounded-full bg-slate-200 dark:bg-slate-700" />
+                </div>
+                <div className="px-3.5 pb-4 pt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                      Parent portal
+                    </span>
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500">Today</span>
+                  </div>
+                  <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-slate-50 p-2 dark:bg-slate-800/60">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-pink-100 text-lg">😊</span>
+                    <div className="leading-tight">
+                      <p className="text-[11px] font-semibold tracking-tight text-slate-900 dark:text-slate-100">Mia Johnson</p>
+                      <p className="text-[9px] font-medium text-emerald-600 dark:text-emerald-400">● Checked in · 8:42 AM</p>
+                    </div>
+                  </div>
+                  <div className="mt-2.5 space-y-2">
+                    <div className="flex items-start gap-2 rounded-xl border border-slate-100 p-2 dark:border-slate-800">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+                        <Utensils className="size-3" />
+                      </span>
+                      <div className="leading-tight">
+                        <p className="text-[10px] font-medium text-slate-900 dark:text-slate-100">Lunch</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500">Ate it all 🍝</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 rounded-xl border border-slate-100 p-2 dark:border-slate-800">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
+                        <MessageCircle className="size-3" />
+                      </span>
+                      <div className="leading-tight">
+                        <p className="text-[10px] font-medium text-slate-900 dark:text-slate-100">Ms. Lee</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500">Loved story time! 💛</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 rounded-xl border border-slate-100 p-2 dark:border-slate-800">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
+                        <Camera className="size-3" />
+                      </span>
+                      <div className="leading-tight">
+                        <p className="text-[10px] font-medium text-slate-900 dark:text-slate-100">New photo</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500">Added to the album 📸</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -324,23 +345,6 @@ export default function LoginPage() {
         }
       `}</style>
     </main>
-  );
-}
-
-function FloatChip({
-  children,
-  delay = "0s",
-}: {
-  children: ReactNode;
-  delay?: string;
-}) {
-  return (
-    <div
-      className="kn-float flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs shadow-lg shadow-slate-900/5 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/90"
-      style={{ animationDelay: delay }}
-    >
-      {children}
-    </div>
   );
 }
 
