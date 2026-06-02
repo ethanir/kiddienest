@@ -57,7 +57,7 @@ export default async function HomePage() {
       </div>
 
       {/* Header */}
-      <header className="relative z-20 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4 md:px-8">
+      <header className="relative z-20 mx-auto flex w-full max-w-[1440px] items-center justify-between px-6 py-3 md:px-10">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="flex size-9 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
             <span aria-hidden className="size-6 bg-current" style={emblemStyle} />
@@ -97,7 +97,7 @@ export default async function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-5 pb-16 pt-8 md:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:pt-12">
+      <section className="relative z-10 mx-auto grid w-full max-w-[1440px] flex-1 items-center gap-8 px-6 pb-4 pt-3 md:px-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12 lg:pt-3">
         {/* Left: copy */}
         <div className="text-center lg:text-left">
           <span className="inline-flex animate-in fade-in-0 slide-in-from-bottom-2 items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm backdrop-blur-sm duration-700 [animation-fill-mode:both] dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
@@ -106,14 +106,14 @@ export default async function HomePage() {
           </span>
 
           <h1
-            className="mt-6 animate-in fade-in-0 slide-in-from-bottom-3 text-balance text-4xl font-semibold leading-[1.05] tracking-tight duration-700 [animation-fill-mode:both] sm:text-5xl lg:text-6xl"
+            className="mt-4 animate-in fade-in-0 slide-in-from-bottom-3 text-balance text-4xl font-semibold leading-[1.03] tracking-tight duration-700 [animation-fill-mode:both] sm:text-5xl"
             style={{ animationDelay: "80ms" }}
           >
             Your daycare&apos;s whole day, in one calm place.
           </h1>
 
           <p
-            className="mx-auto mt-5 max-w-md animate-in fade-in-0 slide-in-from-bottom-3 text-base leading-7 text-slate-500 duration-700 [animation-fill-mode:both] lg:mx-0 dark:text-slate-400"
+            className="mx-auto mt-3 max-w-md animate-in fade-in-0 slide-in-from-bottom-3 text-base leading-7 text-slate-500 duration-700 [animation-fill-mode:both] lg:mx-0 dark:text-slate-400"
             style={{ animationDelay: "160ms" }}
           >
             Check-ins, daily updates, photos, and messages — flowing live to parents, effortless for
@@ -121,7 +121,7 @@ export default async function HomePage() {
           </p>
 
           <div
-            className="mt-8 flex animate-in fade-in-0 slide-in-from-bottom-3 flex-col items-center justify-center gap-3 duration-700 [animation-fill-mode:both] sm:flex-row lg:justify-start"
+            className="mt-5 flex animate-in fade-in-0 slide-in-from-bottom-3 flex-col items-center justify-center gap-3 duration-700 [animation-fill-mode:both] sm:flex-row lg:justify-start"
             style={{ animationDelay: "240ms" }}
           >
             <Link
@@ -140,7 +140,7 @@ export default async function HomePage() {
           </div>
 
           <div
-            className="mt-7 flex animate-in fade-in-0 flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-400 duration-1000 [animation-fill-mode:both] lg:justify-start dark:text-slate-500"
+            className="mt-4 flex animate-in fade-in-0 flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-400 duration-1000 [animation-fill-mode:both] lg:justify-start dark:text-slate-500"
             style={{ animationDelay: "400ms" }}
           >
             <span className="inline-flex items-center gap-1.5">
@@ -157,7 +157,7 @@ export default async function HomePage() {
 
         {/* Right: product mockup */}
         <div
-          className="relative mx-auto w-full max-w-sm animate-in fade-in-0 slide-in-from-bottom-4 zoom-in-95 duration-1000 [animation-fill-mode:both]"
+          className="relative mx-auto w-full max-w-[420px] animate-in fade-in-0 slide-in-from-bottom-4 zoom-in-95 duration-1000 [animation-fill-mode:both] lg:mx-0 lg:ml-auto"
           style={{ animationDelay: "200ms" }}
         >
           {/* glow behind card */}
@@ -173,8 +173,8 @@ export default async function HomePage() {
             </div>
 
             {/* child card */}
-            <div className="mt-4 flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-800/40">
-              <span className="flex size-12 items-center justify-center rounded-xl bg-pink-100 text-2xl">😊</span>
+            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-pink-100 text-2xl">😊</span>
               <div className="flex-1">
                 <p className="text-sm font-semibold tracking-tight">Mia Johnson</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Toddler Room</p>
@@ -189,12 +189,12 @@ export default async function HomePage() {
             </div>
 
             {/* timeline */}
-            <p className="mt-5 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            <p className="mt-4 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Today&apos;s timeline
             </p>
-            <div className="mt-2 space-y-2">
-              <div className="flex items-start gap-3 rounded-xl border border-slate-100 p-3 dark:border-slate-800">
-                <span className="flex size-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+            <div className="mt-2 space-y-1.5">
+              <div className="flex items-start gap-3 rounded-xl border border-slate-100 p-2.5 dark:border-slate-800">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
                   <Utensils className="size-4" />
                 </span>
                 <div className="flex-1">
@@ -206,8 +206,8 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 rounded-xl border border-slate-100 p-3 dark:border-slate-800">
-                <span className="flex size-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
+              <div className="flex items-start gap-3 rounded-xl border border-slate-100 p-2.5 dark:border-slate-800">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
                   <Moon className="size-4" />
                 </span>
                 <div className="flex-1">
@@ -219,8 +219,8 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 rounded-xl border border-slate-100 p-3 dark:border-slate-800">
-                <span className="flex size-9 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
+              <div className="flex items-start gap-3 rounded-xl border border-slate-100 p-2.5 dark:border-slate-800">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
                   <Camera className="size-4" />
                 </span>
                 <div className="flex-1">
@@ -234,31 +234,27 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* floating accent chip */}
-          <div className="absolute -bottom-4 -left-4 hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-xl sm:block dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                <Heart className="size-4" />
-              </span>
-              <div className="pr-1">
-                <p className="text-[11px] font-semibold leading-tight">New update</p>
-                <p className="text-[10px] leading-tight text-slate-400">Just now</p>
-              </div>
-            </div>
+          {/* floating accent pill */}
+          <div className="absolute -top-3.5 -left-3.5 hidden items-center gap-2 rounded-full border border-slate-200 bg-white py-2 pl-2.5 pr-3.5 shadow-xl sm:flex dark:border-slate-800 dark:bg-slate-900">
+            <span className="relative flex size-2.5">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
+            </span>
+            <span className="text-xs font-semibold tracking-tight">New update</span>
           </div>
         </div>
       </section>
 
       {/* Feature strip + pricing */}
-      <section className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-14 md:px-8">
-        <div className="grid gap-4 rounded-3xl border border-slate-200 bg-white/70 p-6 shadow-sm backdrop-blur-sm md:grid-cols-2 md:items-center md:gap-8 md:p-8 dark:border-slate-800 dark:bg-slate-900/70">
+      <section className="relative z-10 mx-auto w-full max-w-[1440px] px-6 pb-6 md:px-10">
+        <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white/70 p-5 shadow-sm backdrop-blur-sm md:grid-cols-2 md:items-center md:gap-10 md:p-5 dark:border-slate-800 dark:bg-slate-900/70">
           {/* features */}
           <div>
             <h2 className="text-lg font-semibold tracking-tight">Everything a small daycare needs.</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               The day-to-day essentials, in one clean app — nothing your team has to learn.
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               {features.map((f) => (
                 <div key={f.label} className="flex items-center gap-2.5">
                   <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${f.tint}`}>
@@ -271,7 +267,7 @@ export default async function HomePage() {
           </div>
 
           {/* pricing */}
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-6 text-center dark:border-slate-800 dark:bg-slate-800/40">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-center dark:border-slate-800 dark:bg-slate-800/40">
             <div className="flex items-end justify-center gap-1.5">
               <span className="text-4xl font-semibold tracking-tight">$59</span>
               <span className="pb-1 text-sm text-slate-500 dark:text-slate-400">/ month</span>
@@ -281,7 +277,7 @@ export default async function HomePage() {
             </p>
             <Link
               href="/login"
-              className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
+              className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
             >
               Get started
               <ArrowRight className="size-4" />
@@ -295,7 +291,7 @@ export default async function HomePage() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-slate-200/70 dark:border-slate-800/70">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-5 py-6 sm:flex-row md:px-8">
+        <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center justify-between gap-3 px-6 py-4 sm:flex-row md:px-10">
           <div className="flex items-center gap-2">
             <span className="flex size-7 items-center justify-center rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900">
               <span aria-hidden className="size-4 bg-current" style={emblemStyle} />
