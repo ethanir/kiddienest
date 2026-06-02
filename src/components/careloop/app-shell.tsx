@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   ClipboardList,
   FileSignature,
-  Heart,
   LayoutDashboard,
   Lock,
   LogOut,
@@ -67,7 +66,20 @@ export function AppShell({
         <aside className="sticky top-6 hidden h-[calc(100vh-48px)] w-64 shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 lg:flex dark:border-slate-800 dark:bg-slate-900">
           <Link href="/app" className="mb-6 flex items-center gap-3 px-2">
             <div className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-              <Heart className="size-5" />
+              <span
+                aria-hidden
+                className="size-7 bg-current"
+                style={{
+                  maskImage: "url(/brand-emblem.png)",
+                  WebkitMaskImage: "url(/brand-emblem.png)",
+                  maskSize: "contain",
+                  WebkitMaskSize: "contain",
+                  maskRepeat: "no-repeat",
+                  WebkitMaskRepeat: "no-repeat",
+                  maskPosition: "center",
+                  WebkitMaskPosition: "center",
+                }}
+              />
             </div>
             <div>
               <p className="text-base font-semibold tracking-tight">KiddieNest</p>
