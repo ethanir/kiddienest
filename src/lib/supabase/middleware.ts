@@ -97,10 +97,11 @@ export async function updateSession(request: NextRequest) {
     if (!onBilling) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role, daycare_id")
+        .select("role, daycare_id, intended_role")
         .eq("id", user.id)
         .maybeSingle();
 
+      // Owner/staff with a daycare: gate on its subscription status.
       if (
         (profile?.role === "admin" || profile?.role === "staff") &&
         profile?.daycare_id
@@ -120,6 +121,17 @@ export async function updateSession(request: NextRequest) {
           url.pathname = "/app/billing";
           return NextResponse.redirect(url);
         }
+      }
+
+      // Signed up as an owner but never paid (no daycare yet) → finish at billing.
+      if (
+        profile?.role === "parent" &&
+        !profile?.daycare_id &&
+        profile?.intended_role === "owner"
+      ) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/app/billing";
+        return NextResponse.redirect(url);
       }
     }
   }
