@@ -103,7 +103,7 @@ export default async function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="relative z-10 mx-auto grid w-full max-w-[1440px] flex-1 items-center gap-8 px-6 pb-4 pt-3 md:px-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12 lg:pt-3">
+      <section className="relative z-10 mx-auto grid w-full max-w-[1440px] flex-1 items-center gap-8 px-6 pb-4 pt-3 md:px-10 lg:grid-cols-[1fr_0.95fr] lg:gap-10 lg:pt-3">
         {/* Left: copy */}
         <div className="text-center lg:text-left">
           <span className="inline-flex animate-in fade-in-0 slide-in-from-bottom-2 items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm backdrop-blur-sm duration-700 [animation-fill-mode:both] dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
@@ -119,7 +119,7 @@ export default async function HomePage() {
           </h1>
 
           <p
-            className="mx-auto mt-3 max-w-md animate-in fade-in-0 slide-in-from-bottom-3 text-base leading-7 text-slate-500 duration-700 [animation-fill-mode:both] lg:mx-0 dark:text-slate-400"
+            className="mx-auto mt-3 max-w-lg animate-in fade-in-0 slide-in-from-bottom-3 text-base leading-7 text-slate-500 duration-700 [animation-fill-mode:both] lg:mx-0 dark:text-slate-400"
             style={{ animationDelay: "160ms" }}
           >
             Check-ins, daily updates, photos, and messages — flowing live to parents, effortless for
@@ -175,7 +175,7 @@ export default async function HomePage() {
 
         {/* Right: product mockup */}
         <div
-          className="relative mx-auto w-full max-w-[420px] animate-in fade-in-0 slide-in-from-bottom-4 zoom-in-95 duration-1000 [animation-fill-mode:both] lg:mx-0 lg:ml-auto"
+          className="relative mx-auto w-full max-w-[480px] animate-in fade-in-0 slide-in-from-bottom-4 zoom-in-95 duration-1000 [animation-fill-mode:both] lg:mx-0 lg:ml-auto"
           style={{ animationDelay: "200ms" }}
         >
           {/* glow behind card */}

@@ -12,6 +12,7 @@ export async function authenticate(
   const mode = String(formData.get("mode") ?? "signin");
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const code = String(formData.get("code") ?? "").trim();
 
   if (!email || !password) {
     return { error: "Enter your email and password." };
@@ -55,9 +56,14 @@ export async function authenticate(
 
   let destination = "/app/parent";
   if (user) {
-    // If an admin invited this email as a teacher, upgrade the role now so the
-    // first redirect lands them on the staff side.
+    // If an admin invited this email as a teacher, upgrade to staff now.
     await supabase.rpc("claim_staff_invite");
+
+    // Unlock code (signup only): a valid code provisions an admin account.
+    // The code is verified server-side inside the redeem_admin_code function.
+    if (mode === "signup" && code) {
+      await supabase.rpc("redeem_admin_code", { p_code: code });
+    }
 
     const { data: profile } = await supabase
       .from("profiles")
