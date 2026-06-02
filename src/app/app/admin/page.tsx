@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   Sparkles,
   StickyNote,
+  Users,
   Utensils,
   XCircle,
 } from "lucide-react";
@@ -75,15 +76,33 @@ export default async function AdminPage() {
   const childById = new Map(children.map((c) => [c.id, c]));
   const recentUpdates = updates.map((u) => ({ ...u, child: childById.get(u.child_id) ?? null }));
 
-  // Per-room overview (present vs enrolled) for the dashboard.
+  // Per-room overview (present vs enrolled, plus staffing ratio) for the dashboard.
+  const { data: staffRows } = await supabase
+    .from("profiles")
+    .select("room_id")
+    .in("role", ["staff", "admin"]);
+  const staffCounts: Record<string, number> = {};
+  for (const s of (staffRows ?? []) as { room_id: string | null }[]) {
+    if (s.room_id) staffCounts[s.room_id] = (staffCounts[s.room_id] ?? 0) + 1;
+  }
+
   const roomOverview = rooms.map((r) => {
     const inRoom = children.filter((c) => c.room_id === r.id);
+    const present = inRoom.filter((c) => c.attendance_status === "checked_in").length;
+    const staff = staffCounts[r.id] ?? 0;
+    const maxPer = r.max_per_staff;
+    const neededStaff = maxPer && maxPer > 0 ? Math.ceil(present / maxPer) : null;
+    const understaffed = neededStaff != null && present > 0 && staff < neededStaff;
     return {
       id: r.id,
       name: r.name,
       enrolled: inRoom.length,
-      present: inRoom.filter((c) => c.attendance_status === "checked_in").length,
+      present,
       capacity: r.capacity,
+      staff,
+      maxPer,
+      neededStaff,
+      understaffed,
     };
   });
   const unassignedCount = children.filter((c) => !c.room_id).length;
@@ -124,7 +143,12 @@ export default async function AdminPage() {
               return (
                 <div
                   key={r.id}
-                  className="rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+                  className={cn(
+                    "rounded-xl border p-4",
+                    r.understaffed
+                      ? "border-amber-300 bg-amber-50/50 dark:border-amber-500/40 dark:bg-amber-500/5"
+                      : "border-slate-200 dark:border-slate-800",
+                  )}
                 >
                   <div className="flex items-baseline justify-between gap-2">
                     <p className="truncate font-medium">{r.name}</p>
@@ -147,9 +171,26 @@ export default async function AdminPage() {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-                    {r.present} present of {r.enrolled} enrolled
-                  </p>
+                  <div className="mt-2.5 flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      <Users className="size-3.5" />
+                      {r.staff} {r.staff === 1 ? "teacher" : "teachers"}
+                      {r.staff > 0 ? (
+                        <span className="text-slate-400 dark:text-slate-500">
+                          · {r.present}:{r.staff}
+                        </span>
+                      ) : null}
+                    </span>
+                    {r.understaffed ? (
+                      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                        Needs {(r.neededStaff ?? 0) - r.staff} more
+                      </span>
+                    ) : r.maxPer && r.present > 0 ? (
+                      <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                        Ratio ok
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               );
             })}

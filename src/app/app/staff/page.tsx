@@ -1,9 +1,11 @@
 import { AppShell } from "@/components/careloop/app-shell";
 import { StaffManager } from "@/components/careloop/staff-manager";
 import { getStaff } from "@/app/app/staff/actions";
+import { getRooms } from "@/app/app/rooms/actions";
 
 export default async function StaffPage() {
   const { members, invites, viewerId, viewerRole } = await getStaff();
+  const rooms = await getRooms();
   const isAdmin = viewerRole === "admin";
 
   return (
@@ -19,6 +21,7 @@ export default async function StaffPage() {
       <StaffManager
         members={members}
         invites={invites}
+        rooms={rooms}
         viewerId={viewerId}
         isAdmin={isAdmin}
       />

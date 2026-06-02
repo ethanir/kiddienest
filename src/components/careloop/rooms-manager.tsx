@@ -45,6 +45,7 @@ export function RoomsManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [capacity, setCapacity] = useState("");
+  const [maxPer, setMaxPer] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -57,6 +58,7 @@ export function RoomsManager({
     setEditingId(null);
     setName("");
     setCapacity("");
+    setMaxPer("");
     setError(null);
     setOpen(true);
   }
@@ -64,6 +66,7 @@ export function RoomsManager({
     setEditingId(room.id);
     setName(room.name);
     setCapacity(room.capacity ? String(room.capacity) : "");
+    setMaxPer(room.max_per_staff ? String(room.max_per_staff) : "");
     setError(null);
     setOpen(true);
   }
@@ -71,15 +74,16 @@ export function RoomsManager({
   function save() {
     setError(null);
     const cap = capacity.trim() ? Math.max(0, parseInt(capacity, 10) || 0) : null;
+    const mps = maxPer.trim() ? Math.max(1, parseInt(maxPer, 10) || 0) : null;
     startTransition(async () => {
       if (editingId) {
-        const res = await updateRoom(editingId, { name, capacity: cap });
+        const res = await updateRoom(editingId, { name, capacity: cap, max_per_staff: mps });
         if (res.error) return setError(res.error);
         setRooms((rs) =>
           rs.map((r) => (r.id === editingId ? { ...r, ...(res.room as RoomRecord) } : r)),
         );
       } else {
-        const res = await createRoom(name, cap);
+        const res = await createRoom(name, cap, mps);
         if (res.error) return setError(res.error);
         if (res.room) setRooms((rs) => [...rs, { ...res.room!, child_count: 0 }]);
       }
@@ -231,6 +235,24 @@ export function RoomsManager({
                 placeholder="e.g. 15"
                 className={inputCls}
               />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium">
+                Children per teacher{" "}
+                <span className="font-normal text-slate-400">(optional)</span>
+              </span>
+              <input
+                value={maxPer}
+                onChange={(e) => setMaxPer(e.target.value.replace(/[^0-9]/g, ""))}
+                type="text"
+                inputMode="numeric"
+                placeholder="e.g. 6"
+                className={inputCls}
+              />
+              <span className="mt-1.5 block text-xs text-slate-400 dark:text-slate-500">
+                Used to flag understaffing on the dashboard (e.g. 6 means one teacher per 6
+                children).
+              </span>
             </label>
             {error ? (
               <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">

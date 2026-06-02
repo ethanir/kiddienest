@@ -10,6 +10,7 @@ export type StaffMember = {
   full_name: string | null;
   email: string | null;
   role: string;
+  room_id: string | null;
 };
 
 export type StaffInvite = {
@@ -32,7 +33,7 @@ export async function getStaff(): Promise<{
 
   const { data: memberRows } = await supabase
     .from("profiles")
-    .select("id, full_name, email, role")
+    .select("id, full_name, email, role, room_id")
     .in("role", ["staff", "admin"])
     .order("full_name");
 

@@ -6,6 +6,8 @@ import { Loader2, Mail, Plus, Trash2, UserPlus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { SelectField } from "@/components/careloop/select-field";
+import type { RoomLite } from "@/components/careloop/room-filter";
+import { assignStaffRoom } from "@/app/app/rooms/actions";
 import {
   cancelInvite,
   inviteStaff,
@@ -28,11 +30,13 @@ const roleBadge: Record<string, string> = {
 export function StaffManager({
   members,
   invites,
+  rooms,
   viewerId,
   isAdmin,
 }: {
   members: StaffMember[];
   invites: StaffInvite[];
+  rooms: RoomLite[];
   viewerId: string | null;
   isAdmin: boolean;
 }) {
@@ -43,6 +47,23 @@ export function StaffManager({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const roomNameById = Object.fromEntries(rooms.map((r) => [r.id, r.name]));
+
+  function changeStaffRoom(member: StaffMember, roomId: string | null) {
+    setError(null);
+    setNotice(null);
+    setBusyId(member.id);
+    startTransition(async () => {
+      const res = await assignStaffRoom(member.id, roomId);
+      setBusyId(null);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      router.refresh();
+    });
+  }
 
   function sendInvite() {
     const e = email.trim();
@@ -123,7 +144,8 @@ export function StaffManager({
           <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
             <span className="font-medium text-slate-700 dark:text-slate-300">Staff</span> can check
             children in/out, post daily updates, and message families.{" "}
-            <span className="font-medium text-slate-700 dark:text-slate-300">Admins</span> can do all
+            <span className="font-medium text-slate-700 dark:text-slate-300">Admins</span>{" "}
+            can do all
             that and also manage the team. There&apos;s no extra charge for more teammates or admins.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -199,9 +221,27 @@ export function StaffManager({
                   {m.email ? (
                     <p className="truncate text-xs text-slate-500 dark:text-slate-400">{m.email}</p>
                   ) : null}
+                  {!(isAdmin && !isSelf) && m.room_id ? (
+                    <p className="truncate text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      {roomNameById[m.room_id] ?? "Room"}
+                    </p>
+                  ) : null}
                 </div>
                 {isAdmin && !isSelf ? (
                   <div className="flex items-center gap-2">
+                    {rooms.length > 0 ? (
+                      <SelectField
+                        ariaLabel={`Room for ${label}`}
+                        size="sm"
+                        value={m.room_id ?? "none"}
+                        onValueChange={(v) => changeStaffRoom(m, v === "none" ? null : v)}
+                        disabled={busyId === m.id}
+                        options={[
+                          { value: "none", label: "No room" },
+                          ...rooms.map((r) => ({ value: r.id, label: r.name })),
+                        ]}
+                      />
+                    ) : null}
                     <SelectField
                       ariaLabel={`Role for ${label}`}
                       size="sm"
