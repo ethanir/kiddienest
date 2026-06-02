@@ -89,5 +89,40 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // Billing gate: staff/admin whose daycare isn't active get sent to billing.
+  // (Parents are never gated — KiddieNest is free for them.)
+  if (user && pathname.startsWith("/app")) {
+    const onBilling =
+      pathname === "/app/billing" || pathname.startsWith("/app/billing/");
+    if (!onBilling) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, daycare_id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (
+        (profile?.role === "admin" || profile?.role === "staff") &&
+        profile?.daycare_id
+      ) {
+        const { data: daycare } = await supabase
+          .from("daycares")
+          .select("subscription_status")
+          .eq("id", profile.daycare_id)
+          .maybeSingle();
+
+        const ok =
+          daycare?.subscription_status === "active" ||
+          daycare?.subscription_status === "trialing";
+
+        if (!ok) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/app/billing";
+          return NextResponse.redirect(url);
+        }
+      }
+    }
+  }
+
   return supabaseResponse;
 }

@@ -7,7 +7,17 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
-import { ArrowRight, Building2, Check, KeyRound, Loader2, Lock, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  Camera,
+  Check,
+  KeyRound,
+  Loader2,
+  Lock,
+  MessageCircle,
+  Users,
+} from "lucide-react";
 
 import { authenticate, type AuthState } from "./actions";
 
@@ -45,8 +55,46 @@ export default function LoginPage() {
     <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-slate-50 px-4 py-10 dark:bg-slate-950">
       {/* atmosphere — ties the page to the landing */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-28 left-1/2 size-[440px] -translate-x-1/2 rounded-full bg-emerald-300/25 blur-[120px] dark:bg-emerald-500/10" />
+        <div className="absolute -top-32 -left-24 size-[460px] rounded-full bg-emerald-300/25 blur-[130px] dark:bg-emerald-500/10" />
+        <div className="absolute -bottom-40 -right-24 size-[460px] rounded-full bg-sky-200/35 blur-[130px] dark:bg-sky-500/10" />
         <div className="absolute inset-0 opacity-[0.15] dark:opacity-[0.05]" style={dotGrid} />
+
+        {/* floating product chips — echo the landing, calm + alive (desktop only) */}
+        <div className="absolute left-[12%] top-[24%] hidden lg:block">
+          <FloatChip delay="0s">
+            <span className="flex size-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+              <Check className="size-3.5" strokeWidth={3} />
+            </span>
+            <span>
+              <span className="block font-semibold">Mia checked in</span>
+              <span className="block text-slate-400 dark:text-slate-500">8:42 AM</span>
+            </span>
+          </FloatChip>
+        </div>
+
+        <div className="absolute right-[11%] top-[34%] hidden lg:block">
+          <FloatChip delay="1.6s">
+            <span className="flex size-7 items-center justify-center rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
+              <Camera className="size-3.5" />
+            </span>
+            <span>
+              <span className="block font-semibold">New photo</span>
+              <span className="block text-slate-400 dark:text-slate-500">Story time</span>
+            </span>
+          </FloatChip>
+        </div>
+
+        <div className="absolute right-[13%] top-[56%] hidden lg:block">
+          <FloatChip delay="3.1s">
+            <span className="flex size-7 items-center justify-center rounded-full bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+              <MessageCircle className="size-3.5" />
+            </span>
+            <span>
+              <span className="block font-semibold">Ms. Lee</span>
+              <span className="block text-slate-400 dark:text-slate-500">She had a great day! 💛</span>
+            </span>
+          </FloatChip>
+        </div>
       </div>
 
       <div className="relative z-10 w-full max-w-md">
@@ -245,6 +293,18 @@ export default function LoginPage() {
           animation: kn-load 1.1s ease-in-out infinite;
         }
         @keyframes kn-load { 0% { left: -40%; } 100% { left: 100%; } }
+        .kn-float {
+          animation: kn-float-move 7s ease-in-out infinite;
+          opacity: 0;
+          animation-name: kn-float-in, kn-float-move;
+          animation-duration: 0.8s, 7s;
+          animation-timing-function: ease-out, ease-in-out;
+          animation-iteration-count: 1, infinite;
+          animation-fill-mode: both, both;
+        }
+        @keyframes kn-float-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes kn-float-move { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+        @media (prefers-reduced-motion: reduce) { .kn-float { animation: kn-float-in 0.8s ease-out both; } }
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus,
@@ -264,6 +324,23 @@ export default function LoginPage() {
         }
       `}</style>
     </main>
+  );
+}
+
+function FloatChip({
+  children,
+  delay = "0s",
+}: {
+  children: ReactNode;
+  delay?: string;
+}) {
+  return (
+    <div
+      className="kn-float flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs shadow-lg shadow-slate-900/5 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/90"
+      style={{ animationDelay: delay }}
+    >
+      {children}
+    </div>
   );
 }
 

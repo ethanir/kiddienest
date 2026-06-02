@@ -37,7 +37,13 @@ export default async function BillingPage({
     }
   }
 
-  const isActive = daycare ? ACTIVE.has(daycare.subscription_status) : false;
+  const statusValue = daycare?.subscription_status ?? null;
+  const isActive = statusValue ? ACTIVE.has(statusValue) : false;
+  // past_due / canceled / unpaid => returning owner who lapsed (vs first-time pending_setup)
+  const isReactivation =
+    statusValue === "past_due" ||
+    statusValue === "canceled" ||
+    statusValue === "unpaid";
 
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
@@ -50,6 +56,13 @@ export default async function BillingPage({
       {status === "cancel" && (
         <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-300">
           Checkout canceled — you haven&apos;t been charged.
+        </div>
+      )}
+      {!isActive && isReactivation && (
+        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+          {statusValue === "past_due"
+            ? "Your last payment didn't go through, so access is paused. Reactivate below to restore your daycare."
+            : "Your subscription has ended. Reactivate below to restore access to your daycare."}
         </div>
       )}
 
@@ -73,9 +86,13 @@ export default async function BillingPage({
         </div>
       ) : (
         <div className={`${cardBase} p-8 shadow-sm`}>
-          <h1 className="text-2xl font-semibold tracking-tight">Start your daycare</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {isReactivation ? "Reactivate your daycare" : "Start your daycare"}
+          </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Everything your small daycare needs, in one calm place — free for the parents you invite.
+            {isReactivation
+              ? "Pick up right where you left off — your children and history are safe."
+              : "Everything your small daycare needs, in one calm place — free for the parents you invite."}
           </p>
 
           <div className="mt-6 flex items-baseline gap-1.5">
@@ -102,7 +119,7 @@ export default async function BillingPage({
               type="submit"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
             >
-              Subscribe <ArrowRight className="size-4" />
+              {isReactivation ? "Reactivate" : "Subscribe"} <ArrowRight className="size-4" />
             </button>
           </form>
           <p className="mt-3 text-center text-xs text-slate-400 dark:text-slate-500">
