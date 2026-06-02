@@ -25,6 +25,7 @@ import {
 import { ChildFamilyDialog } from "@/components/careloop/child-family-dialog";
 import { cn } from "@/lib/utils";
 import { createChild, updateChild, type ChildRecord } from "@/app/app/children/actions";
+import type { RoomRecord } from "@/app/app/rooms/actions";
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
@@ -49,7 +50,7 @@ const AVATARS = [
 
 type FormState = {
   name: string;
-  room: string;
+  room_id: string;
   birthdate: string;
   allergies: string;
   emoji: string;
@@ -58,14 +59,20 @@ type FormState = {
 
 const emptyForm: FormState = {
   name: "",
-  room: "",
+  room_id: "",
   birthdate: "",
   allergies: "",
   emoji: AVATARS[0].emoji,
   bg: AVATARS[0].bg,
 };
 
-export function ChildrenManager({ initialChildren }: { initialChildren: ChildRecord[] }) {
+export function ChildrenManager({
+  initialChildren,
+  rooms,
+}: {
+  initialChildren: ChildRecord[];
+  rooms: RoomRecord[];
+}) {
   const [children, setChildren] = useState<ChildRecord[]>(initialChildren);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -87,7 +94,7 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildRec
     setEditingId(child.id);
     setForm({
       name: child.full_name,
-      room: child.room ?? "",
+      room_id: child.room_id ?? "",
       birthdate: child.birthdate ?? "",
       allergies:
         child.allergies && child.allergies.trim().toLowerCase() !== "none"
@@ -113,7 +120,7 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildRec
     setError(null);
     const input = {
       full_name: form.name,
-      room: form.room,
+      room_id: form.room_id || null,
       birthdate: form.birthdate || null,
       allergies: form.allergies,
       emoji: form.emoji,
@@ -284,12 +291,23 @@ export function ChildrenManager({ initialChildren }: { initialChildren: ChildRec
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Room">
-                <input
-                  value={form.room}
-                  onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))}
-                  placeholder="e.g. Toddler Room"
-                  className={inputCls}
-                />
+                <select
+                  value={form.room_id}
+                  onChange={(e) => setForm((f) => ({ ...f, room_id: e.target.value }))}
+                  className={cn(inputCls, "appearance-none bg-white dark:bg-slate-900")}
+                >
+                  <option value="">Unassigned</option>
+                  {rooms.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+                {rooms.length === 0 ? (
+                  <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+                    No rooms yet — create rooms in the Rooms section to assign children.
+                  </p>
+                ) : null}
               </Field>
               <Field label="Birthday">
                 <input

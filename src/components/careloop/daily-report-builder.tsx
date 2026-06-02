@@ -19,6 +19,12 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  RoomFilterBar,
+  matchesRoomAndQuery,
+  useRoomFilter,
+  type RoomLite,
+} from "@/components/careloop/room-filter";
 import { cn } from "@/lib/utils";
 import { createUpdate, type PostState } from "@/app/app/daily-report/actions";
 
@@ -26,6 +32,7 @@ type Child = {
   id: string;
   full_name: string;
   room: string;
+  room_id: string | null;
   emoji: string;
   avatar_bg: string;
 };
@@ -50,7 +57,13 @@ const reportTypes: ReportType[] = [
   { label: "Incident", title: "Incident note", defaultNote: "Minor incident recorded. Parent signature may be needed.", icon: AlertTriangle, color: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" },
 ];
 
-export function DailyReportBuilder({ childProfiles }: { childProfiles: Child[] }) {
+export function DailyReportBuilder({
+  childProfiles,
+  rooms,
+}: {
+  childProfiles: Child[];
+  rooms: RoomLite[];
+}) {
   const [selectedChildId, setSelectedChildId] = useState(childProfiles[0]?.id ?? "");
   const [selectedTypeLabel, setSelectedTypeLabel] = useState(reportTypes[0].label);
   const [note, setNote] = useState(reportTypes[0].defaultNote);
@@ -67,6 +80,20 @@ export function DailyReportBuilder({ childProfiles }: { childProfiles: Child[] }
   const selectedType = useMemo(
     () => reportTypes.find((t) => t.label === selectedTypeLabel) ?? reportTypes[0],
     [selectedTypeLabel],
+  );
+
+  const { roomId, setRoomId, query, setQuery } = useRoomFilter(rooms);
+  const roomCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const c of childProfiles) if (c.room_id) m[c.room_id] = (m[c.room_id] ?? 0) + 1;
+    return m;
+  }, [childProfiles]);
+  const visibleChildren = useMemo(
+    () =>
+      childProfiles.filter((c) =>
+        matchesRoomAndQuery(c, roomId, query, (x) => x.room_id, (x) => x.full_name),
+      ),
+    [childProfiles, roomId, query],
   );
 
   const isPhoto = selectedType.label === "Photo";
@@ -135,7 +162,7 @@ export function DailyReportBuilder({ childProfiles }: { childProfiles: Child[] }
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+    <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr] [&>*]:min-w-0">
       <div className={`${cardBase} p-5 md:p-6`}>
         <div className="mb-5">
           <h2 className="text-xl font-semibold">Create parent update</h2>
@@ -147,36 +174,58 @@ export function DailyReportBuilder({ childProfiles }: { childProfiles: Child[] }
         <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
           1. Select child
         </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {childProfiles.map((child) => (
-            <button
-              key={child.id}
-              type="button"
-              onClick={() => setSelectedChildId(child.id)}
-              className={cn(
-                "rounded-xl border p-4 text-left transition-colors",
-                selectedChildId === child.id
-                  ? "border-emerald-500 bg-emerald-50 dark:border-emerald-500/60 dark:bg-emerald-500/10"
-                  : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex size-12 items-center justify-center rounded-xl text-2xl"
-                  style={{ background: child.avatar_bg }}
-                >
-                  {child.emoji}
+        {rooms.length > 0 || childProfiles.length > 8 ? (
+          <div className="mb-3">
+            <RoomFilterBar
+              rooms={rooms}
+              counts={roomCounts}
+              totalCount={childProfiles.length}
+              roomId={roomId}
+              onRoomChange={setRoomId}
+              query={query}
+              onQueryChange={setQuery}
+              searchPlaceholder="Search children…"
+            />
+          </div>
+        ) : null}
+        {visibleChildren.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 py-8 text-center dark:border-slate-700">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              No children match{query ? ` “${query}”` : " this room"}.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {visibleChildren.map((child) => (
+              <button
+                key={child.id}
+                type="button"
+                onClick={() => setSelectedChildId(child.id)}
+                className={cn(
+                  "rounded-xl border p-4 text-left transition-colors",
+                  selectedChildId === child.id
+                    ? "border-emerald-500 bg-emerald-50 dark:border-emerald-500/60 dark:bg-emerald-500/10"
+                    : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex size-12 items-center justify-center rounded-xl text-2xl"
+                    style={{ background: child.avatar_bg }}
+                  >
+                    {child.emoji}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{child.full_name}</p>
+                    <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                      {child.room || "—"}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{child.full_name}</p>
-                  <p className="truncate text-sm text-slate-500 dark:text-slate-400">
-                    {child.room || "—"}
-                  </p>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+              </button>
+            ))}
+          </div>
+        )}
 
         <p className="mb-3 mt-6 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
           2. Select update type

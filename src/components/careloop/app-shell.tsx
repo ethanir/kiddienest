@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import {
   Baby,
   CheckCircle2,
+  DoorOpen,
   ClipboardList,
   FileSignature,
   LayoutDashboard,
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { href: "/app/daily-report", label: "Reports", icon: ClipboardList, roles: ["staff", "admin"] },
   { href: "/app/messages", label: "Messages", icon: MessageCircle, roles: ["staff", "admin"] },
   { href: "/app/children", label: "Children", icon: Baby, roles: ["staff", "admin"] },
+  { href: "/app/rooms", label: "Rooms", icon: DoorOpen, roles: ["admin"] },
   { href: "/app/incidents", label: "Incidents", icon: ShieldAlert, roles: ["staff", "admin"] },
   { href: "/app/staff", label: "Staff", icon: UsersRound, roles: ["staff", "admin"] },
   { href: "/app/forms", label: "Forms", icon: FileSignature, roles: ["staff", "admin"], soon: true },

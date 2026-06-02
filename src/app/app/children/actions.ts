@@ -8,6 +8,7 @@ export type ChildRecord = {
   id: string;
   full_name: string;
   room: string | null;
+  room_id: string | null;
   birthdate: string | null;
   allergies: string | null;
   emoji: string | null;
@@ -31,7 +32,7 @@ export type ChildInvite = {
 
 type ChildInput = {
   full_name: string;
-  room: string;
+  room_id: string | null;
   birthdate: string | null;
   allergies: string;
   emoji: string;
@@ -39,7 +40,7 @@ type ChildInput = {
 };
 
 const SELECT =
-  "id, full_name, room, birthdate, allergies, emoji, avatar_bg, attendance_status";
+  "id, full_name, room, room_id, birthdate, allergies, emoji, avatar_bg, attendance_status";
 
 function staffError(error: { message: string; code?: string }): string {
   const msg = error.message.toLowerCase();
@@ -49,6 +50,15 @@ function staffError(error: { message: string; code?: string }): string {
   return error.message;
 }
 
+async function roomName(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  roomId: string | null,
+): Promise<string | null> {
+  if (!roomId) return null;
+  const { data } = await supabase.from("rooms").select("name").eq("id", roomId).maybeSingle();
+  return data?.name ?? null;
+}
+
 export async function createChild(
   input: ChildInput,
 ): Promise<{ child?: ChildRecord; error?: string }> {
@@ -56,11 +66,13 @@ export async function createChild(
   if (!name) return { error: "Please enter the child's name." };
 
   const supabase = await createClient();
+  const rName = await roomName(supabase, input.room_id);
   const { data, error } = await supabase
     .from("children")
     .insert({
       full_name: name,
-      room: input.room.trim() || null,
+      room_id: input.room_id,
+      room: rName,
       birthdate: input.birthdate,
       allergies: input.allergies.trim() || "None",
       emoji: input.emoji,
@@ -84,11 +96,13 @@ export async function updateChild(
   if (!name) return { error: "Please enter the child's name." };
 
   const supabase = await createClient();
+  const rName = await roomName(supabase, input.room_id);
   const { data, error } = await supabase
     .from("children")
     .update({
       full_name: name,
-      room: input.room.trim() || null,
+      room_id: input.room_id,
+      room: rName,
       birthdate: input.birthdate,
       allergies: input.allergies.trim() || "None",
       emoji: input.emoji,

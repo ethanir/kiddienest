@@ -13,6 +13,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { CountUp } from "@/components/careloop/count-up";
 import { LocalTime } from "@/components/careloop/local-time";
+import {
+  RoomFilterBar,
+  matchesRoomAndQuery,
+  useRoomFilter,
+  type RoomLite,
+} from "@/components/careloop/room-filter";
 import { useRealtime } from "@/lib/use-realtime";
 import { cn } from "@/lib/utils";
 import {
@@ -26,6 +32,7 @@ type Child = {
   id: string;
   full_name: string;
   room: string;
+  room_id: string | null;
   emoji: string;
   avatar_bg: string;
   allergies: string;
@@ -48,10 +55,17 @@ function withStatus(c: Child, next: AttendanceStatus): Child {
   return { ...c, attendance_status: next, checked_in_at: null, checked_out_at: null };
 }
 
-export function CheckInBoard({ childProfiles }: { childProfiles: Child[] }) {
+export function CheckInBoard({
+  childProfiles,
+  rooms,
+}: {
+  childProfiles: Child[];
+  rooms: RoomLite[];
+}) {
   const [children, setChildren] = useState<Child[]>(childProfiles);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { roomId, setRoomId, query, setQuery } = useRoomFilter(rooms);
 
   // Tracks children with an in-flight write so a live re-fetch can't overwrite
   // a just-tapped status with stale data; the per-child write queue keeps rapid
@@ -59,14 +73,31 @@ export function CheckInBoard({ childProfiles }: { childProfiles: Child[] }) {
   const pendingRef = useRef<Set<string>>(new Set());
   const chainRef = useRef<Map<string, Promise<void>>>(new Map());
 
+  // Per-room counts for the filter chips (from the full roster).
+  const roomCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const c of children) if (c.room_id) m[c.room_id] = (m[c.room_id] ?? 0) + 1;
+    return m;
+  }, [children]);
+
+  // The children currently shown (room + name filter).
+  const visible = useMemo(
+    () =>
+      children.filter((c) =>
+        matchesRoomAndQuery(c, roomId, query, (x) => x.room_id, (x) => x.full_name),
+      ),
+    [children, roomId, query],
+  );
+
+  // Stats reflect the current view (a teacher's room, or the whole center).
   const counts = useMemo(
     () => ({
-      in: children.filter((c) => c.attendance_status === "checked_in").length,
-      notArrived: children.filter((c) => c.attendance_status === "not_arrived").length,
-      out: children.filter((c) => c.attendance_status === "checked_out").length,
-      absent: children.filter((c) => c.attendance_status === "absent").length,
+      in: visible.filter((c) => c.attendance_status === "checked_in").length,
+      notArrived: visible.filter((c) => c.attendance_status === "not_arrived").length,
+      out: visible.filter((c) => c.attendance_status === "checked_out").length,
+      absent: visible.filter((c) => c.attendance_status === "absent").length,
     }),
-    [children],
+    [visible],
   );
 
   // Merge a fresh roster but keep the local copy of any child mid-write, so a
@@ -155,6 +186,17 @@ export function CheckInBoard({ childProfiles }: { childProfiles: Child[] }) {
 
   return (
     <div className="space-y-5">
+      <RoomFilterBar
+        rooms={rooms}
+        counts={roomCounts}
+        totalCount={children.length}
+        roomId={roomId}
+        onRoomChange={setRoomId}
+        query={query}
+        onQueryChange={setQuery}
+        searchPlaceholder="Search children…"
+      />
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <MiniStatus label="Checked in" value={counts.in} tone="green" />
         <MiniStatus label="Not arrived" value={counts.notArrived} tone="amber" />
@@ -191,88 +233,96 @@ export function CheckInBoard({ childProfiles }: { childProfiles: Child[] }) {
           </p>
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {children.map((child, index) => {
-            const isIn = child.attendance_status === "checked_in";
-            const isOut = child.attendance_status === "checked_out";
-            return (
-              <article
-                key={child.id}
-                style={{ animationDelay: `${Math.min(index * 45, 270)}ms` }}
-                className={cn(
-                  "relative animate-in fade-in-0 slide-in-from-bottom-2 rounded-2xl border bg-white p-4 transition duration-500 [animation-fill-mode:both] dark:bg-slate-900",
-                  isIn
-                    ? "border-emerald-300 ring-1 ring-emerald-500/20 dark:border-emerald-500/40 dark:ring-emerald-500/20"
-                    : "border-slate-200 dark:border-slate-800",
-                )}
-              >
-                {isIn ? (
-                  <span className="absolute right-3 top-3 flex size-2.5" aria-hidden="true">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
-                  </span>
-                ) : null}
-                <div className="flex gap-4">
-                  <div
-                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-3xl"
-                    style={{ background: child.avatar_bg }}
-                  >
-                    {child.emoji}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-base font-semibold">{child.full_name}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {child.room || "—"}
-                    </p>
-                    <div className="mt-2">
-                      <StatusBadge status={child.attendance_status} />
+        {visible.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 py-10 text-center dark:border-slate-700">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              No children match{query ? ` “${query}”` : " this room"}.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {visible.map((child, index) => {
+              const isIn = child.attendance_status === "checked_in";
+              const isOut = child.attendance_status === "checked_out";
+              return (
+                <article
+                  key={child.id}
+                  style={{ animationDelay: `${Math.min(index * 45, 270)}ms` }}
+                  className={cn(
+                    "relative animate-in fade-in-0 slide-in-from-bottom-2 rounded-2xl border bg-white p-4 transition duration-500 [animation-fill-mode:both] dark:bg-slate-900",
+                    isIn
+                      ? "border-emerald-300 ring-1 ring-emerald-500/20 dark:border-emerald-500/40 dark:ring-emerald-500/20"
+                      : "border-slate-200 dark:border-slate-800",
+                  )}
+                >
+                  {isIn ? (
+                    <span className="absolute right-3 top-3 flex size-2.5" aria-hidden="true">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
+                    </span>
+                  ) : null}
+                  <div className="flex gap-4">
+                    <div
+                      className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-3xl"
+                      style={{ background: child.avatar_bg }}
+                    >
+                      {child.emoji}
                     </div>
-                    {isIn && child.checked_in_at ? (
-                      <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-                        Checked in at <LocalTime iso={child.checked_in_at} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-base font-semibold">{child.full_name}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {child.room || "—"}
                       </p>
-                    ) : null}
-                    {isOut && child.checked_out_at ? (
-                      <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-                        Checked out at <LocalTime iso={child.checked_out_at} />
+                      <div className="mt-2">
+                        <StatusBadge status={child.attendance_status} />
+                      </div>
+                      {isIn && child.checked_in_at ? (
+                        <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+                          Checked in at <LocalTime iso={child.checked_in_at} />
+                        </p>
+                      ) : null}
+                      {isOut && child.checked_out_at ? (
+                        <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+                          Checked out at <LocalTime iso={child.checked_out_at} />
+                        </p>
+                      ) : null}
+                      <p className="mt-1.5 text-xs font-medium text-slate-400 dark:text-slate-500">
+                        Allergy: {child.allergies}
                       </p>
-                    ) : null}
-                    <p className="mt-1.5 text-xs font-medium text-slate-400 dark:text-slate-500">
-                      Allergy: {child.allergies}
-                    </p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <StatusButton
-                    label="Check in"
-                    active={isIn}
-                    activeClassName="bg-emerald-600 text-white hover:bg-emerald-700"
-                    onClick={() => setStatus(child, "checked_in")}
-                  />
-                  <StatusButton
-                    label="Check out"
-                    active={isOut}
-                    activeClassName="bg-violet-600 text-white hover:bg-violet-700"
-                    onClick={() => setStatus(child, "checked_out")}
-                  />
-                  <StatusButton
-                    label="Absent"
-                    active={child.attendance_status === "absent"}
-                    activeClassName="bg-slate-700 text-white hover:bg-slate-800 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-100"
-                    onClick={() => setStatus(child, "absent")}
-                  />
-                  <StatusButton
-                    label="Reset"
-                    active={false}
-                    activeClassName=""
-                    onClick={() => setStatus(child, "not_arrived")}
-                  />
-                </div>
-              </article>
-            );
-          })}
-        </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <StatusButton
+                      label="Check in"
+                      active={isIn}
+                      activeClassName="bg-emerald-600 text-white hover:bg-emerald-700"
+                      onClick={() => setStatus(child, "checked_in")}
+                    />
+                    <StatusButton
+                      label="Check out"
+                      active={isOut}
+                      activeClassName="bg-violet-600 text-white hover:bg-violet-700"
+                      onClick={() => setStatus(child, "checked_out")}
+                    />
+                    <StatusButton
+                      label="Absent"
+                      active={child.attendance_status === "absent"}
+                      activeClassName="bg-slate-700 text-white hover:bg-slate-800 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-100"
+                      onClick={() => setStatus(child, "absent")}
+                    />
+                    <StatusButton
+                      label="Reset"
+                      active={false}
+                      activeClassName=""
+                      onClick={() => setStatus(child, "not_arrived")}
+                    />
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

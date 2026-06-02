@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronLeft, MessageCircle } from "lucide-react";
 
 import { MessageThread } from "@/components/careloop/message-thread";
+import {
+  RoomFilterBar,
+  matchesRoomAndQuery,
+  useRoomFilter,
+  type RoomLite,
+} from "@/components/careloop/room-filter";
 import { cn } from "@/lib/utils";
 
 type ChildLite = {
   id: string;
   full_name: string;
   room: string | null;
+  room_id: string | null;
   emoji: string | null;
   avatar_bg: string | null;
 };
@@ -17,9 +24,29 @@ type ChildLite = {
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
-export function StaffMessages({ children }: { children: ChildLite[] }) {
+export function StaffMessages({
+  children,
+  rooms,
+}: {
+  children: ChildLite[];
+  rooms: RoomLite[];
+}) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = children.find((c) => c.id === selectedId) ?? null;
+  const { roomId, setRoomId, query, setQuery } = useRoomFilter(rooms);
+
+  const roomCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const c of children) if (c.room_id) m[c.room_id] = (m[c.room_id] ?? 0) + 1;
+    return m;
+  }, [children]);
+  const visible = useMemo(
+    () =>
+      children.filter((c) =>
+        matchesRoomAndQuery(c, roomId, query, (x) => x.room_id, (x) => x.full_name),
+      ),
+    [children, roomId, query],
+  );
 
   if (children.length === 0) {
     return (
@@ -36,10 +63,29 @@ export function StaffMessages({ children }: { children: ChildLite[] }) {
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
+    <div className="grid gap-5 lg:grid-cols-[300px_1fr] [&>*]:min-w-0">
       <div className={cn(cardBase, "p-2", selected ? "hidden lg:block" : "block")}>
+        {rooms.length > 0 || children.length > 8 ? (
+          <div className="p-2">
+            <RoomFilterBar
+              rooms={rooms}
+              counts={roomCounts}
+              totalCount={children.length}
+              roomId={roomId}
+              onRoomChange={setRoomId}
+              query={query}
+              onQueryChange={setQuery}
+              searchPlaceholder="Search families…"
+            />
+          </div>
+        ) : null}
         <div className="space-y-1">
-          {children.map((c) => (
+          {visible.length === 0 ? (
+            <p className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+              No families match{query ? ` “${query}”` : " this room"}.
+            </p>
+          ) : (
+            visible.map((c) => (
             <button
               key={c.id}
               type="button"
@@ -64,7 +110,8 @@ export function StaffMessages({ children }: { children: ChildLite[] }) {
                 </p>
               </div>
             </button>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
