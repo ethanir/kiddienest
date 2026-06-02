@@ -69,13 +69,19 @@ export default async function HomePage() {
             <ThemeToggle />
           </div>
           {signedIn ? (
-            <Link
-              href="/app"
-              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-emerald-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
-            >
-              Go to dashboard
-              <ArrowRight className="size-4" />
-            </Link>
+            <>
+              <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 sm:inline-flex dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                Signed in
+              </span>
+              <Link
+                href="/app"
+                className="inline-flex h-10 items-center gap-1.5 rounded-full bg-emerald-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
+              >
+                Go to dashboard
+                <ArrowRight className="size-4" />
+              </Link>
+            </>
           ) : (
             <>
               <Link
@@ -124,19 +130,31 @@ export default async function HomePage() {
             className="mt-5 flex animate-in fade-in-0 slide-in-from-bottom-3 flex-col items-center justify-center gap-3 duration-700 [animation-fill-mode:both] sm:flex-row lg:justify-start"
             style={{ animationDelay: "240ms" }}
           >
-            <Link
-              href="/login"
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-7 text-sm font-medium text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-emerald-600/30 sm:w-auto"
-            >
-              Get started
-              <ArrowRight className="size-4" />
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-7 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              Sign in
-            </Link>
+            {signedIn ? (
+              <Link
+                href="/app"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-7 text-sm font-medium text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-emerald-600/30 sm:w-auto"
+              >
+                Go to dashboard
+                <ArrowRight className="size-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-7 text-sm font-medium text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-emerald-600/30 sm:w-auto"
+                >
+                  Get started
+                  <ArrowRight className="size-4" />
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex h-12 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-7 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                >
+                  Sign in
+                </Link>
+              </>
+            )}
           </div>
 
           <div
@@ -276,10 +294,10 @@ export default async function HomePage() {
               Per daycare · unlimited children &amp; staff · free for parents
             </p>
             <Link
-              href="/login"
+              href={signedIn ? "/app" : "/login"}
               className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
             >
-              Get started
+              {signedIn ? "Go to dashboard" : "Get started"}
               <ArrowRight className="size-4" />
             </Link>
             <p className="mt-2.5 text-[11px] text-slate-400 dark:text-slate-500">
@@ -291,13 +309,7 @@ export default async function HomePage() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-slate-200/70 dark:border-slate-800/70">
-        <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center justify-between gap-3 px-6 py-4 sm:flex-row md:px-10">
-          <div className="flex items-center gap-2">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-              <span aria-hidden className="size-4 bg-current" style={emblemStyle} />
-            </span>
-            <span className="text-sm font-semibold tracking-tight">KiddieNest</span>
-          </div>
+        <div className="mx-auto w-full max-w-[1440px] px-6 py-4 text-center md:px-10">
           <p className="text-xs text-slate-400 dark:text-slate-500">© {new Date().getFullYear()} KiddieNest · Daycare updates made simple</p>
         </div>
       </footer>
