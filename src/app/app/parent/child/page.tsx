@@ -1,22 +1,19 @@
 import { Baby, HeartPulse, Home as HomeIcon, ShieldAlert } from "lucide-react";
 
-import { ParentShell } from "@/components/careloop/parent-shell";
 import { ParentIncidents } from "@/components/careloop/parent-incidents";
 import { getIncidentsForChild } from "@/app/app/incidents/actions";
 
-import { loadParentChild, requireParentUser } from "../shared";
+import { loadParentChild } from "../shared";
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
 export default async function ParentChildPage() {
-  await requireParentUser();
   const child = await loadParentChild();
 
   if (!child) {
     return (
-      <ParentShell title="Child">
-        <div className={`${cardBase} p-8 text-center`}>
+      <div className={`${cardBase} p-8 text-center`}>
           <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
             <Baby className="size-6 text-slate-500 dark:text-slate-400" />
           </div>
@@ -24,21 +21,14 @@ export default async function ParentChildPage() {
           <p className="mx-auto mt-1.5 max-w-sm text-sm text-slate-500 dark:text-slate-400">
             Ask your daycare to invite you with this email to see your child&apos;s profile here.
           </p>
-        </div>
-      </ParentShell>
+      </div>
     );
   }
 
   const incidents = await getIncidentsForChild(child.id);
 
   return (
-    <ParentShell
-      title="Child"
-      childName={child.full_name}
-      childEmoji={child.emoji}
-      childBg={child.avatar_bg}
-    >
-      <div className="space-y-5">
+    <div className="space-y-5">
         {/* Profile header */}
         <section className={`${cardBase} p-6 text-center`}>
           <div
@@ -86,8 +76,7 @@ export default async function ParentChildPage() {
             </div>
           )}
         </div>
-      </div>
-    </ParentShell>
+    </div>
   );
 }
 

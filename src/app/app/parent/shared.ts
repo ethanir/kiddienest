@@ -18,7 +18,6 @@ export type ParentChild = {
 // Also claims any pending guardian invites first. Returns null if none linked.
 export async function loadParentChild(): Promise<ParentChild | null> {
   const supabase = await createClient();
-  await supabase.rpc("claim_guardian_invites");
 
   const { data } = await supabase
     .from("children")

@@ -1,21 +1,18 @@
 import { Baby } from "lucide-react";
 
-import { ParentShell } from "@/components/careloop/parent-shell";
 import { MessageThread } from "@/components/careloop/message-thread";
 
-import { loadParentChild, requireParentUser } from "../shared";
+import { loadParentChild } from "../shared";
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
 export default async function ParentMessagesPage() {
-  await requireParentUser();
   const child = await loadParentChild();
 
   if (!child) {
     return (
-      <ParentShell title="Messages">
-        <div className={`${cardBase} p-8 text-center`}>
+      <div className={`${cardBase} p-8 text-center`}>
           <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
             <Baby className="size-6 text-slate-500 dark:text-slate-400" />
           </div>
@@ -23,20 +20,14 @@ export default async function ParentMessagesPage() {
           <p className="mx-auto mt-1.5 max-w-sm text-sm text-slate-500 dark:text-slate-400">
             Once your daycare links your child, you can message their teachers here.
           </p>
-        </div>
-      </ParentShell>
+      </div>
     );
   }
 
   const firstName = child.full_name.split(" ")[0];
 
   return (
-    <ParentShell
-      title="Messages"
-      childName={child.full_name}
-      childEmoji={child.emoji}
-      childBg={child.avatar_bg}
-    >
+    <>
       <section className={`${cardBase} flex h-[calc(100dvh-220px)] flex-col p-4 sm:p-5`}>
         <div className="mb-3">
           <h2 className="text-lg font-semibold tracking-tight">Messages</h2>
@@ -48,6 +39,6 @@ export default async function ParentMessagesPage() {
           <MessageThread childId={child.id} viewerRole="parent" />
         </div>
       </section>
-    </ParentShell>
+    </>
   );
 }

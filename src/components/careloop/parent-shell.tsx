@@ -29,19 +29,7 @@ const TABS = [
   { href: "/app/parent/child", label: "Child", icon: Baby },
 ];
 
-export function ParentShell({
-  childName,
-  childEmoji,
-  childBg,
-  title,
-  children,
-}: {
-  childName?: string;
-  childEmoji?: string;
-  childBg?: string;
-  title: string;
-  children: ReactNode;
-}) {
+export function ParentShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [email, setEmail] = useState<string | null>(null);
 
@@ -84,7 +72,7 @@ export function ParentShell({
 
       {/* ===== Content ===== */}
       <main className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
-        <h1 className="sr-only">{title}</h1>
+        <h1 className="sr-only">KiddieNest</h1>
         {children}
       </main>
 

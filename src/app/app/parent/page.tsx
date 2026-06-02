@@ -1,6 +1,5 @@
 import { Baby, Clock } from "lucide-react";
 
-import { ParentShell } from "@/components/careloop/parent-shell";
 import { ParentIncidents } from "@/components/careloop/parent-incidents";
 import { RealtimeRefresh } from "@/components/careloop/realtime-refresh";
 import {
@@ -11,7 +10,7 @@ import { LocalTime } from "@/components/careloop/local-time";
 import { getIncidentsForChild } from "@/app/app/incidents/actions";
 import { createClient } from "@/lib/supabase/server";
 
-import { loadParentChild, requireParentUser } from "./shared";
+import { loadParentChild } from "./shared";
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
@@ -50,13 +49,11 @@ function StatusPill({
 }
 
 export default async function ParentTodayPage() {
-  await requireParentUser();
   const child = await loadParentChild();
 
   if (!child) {
     return (
-      <ParentShell title="Today">
-        <div className={`${cardBase} p-8 text-center`}>
+      <div className={`${cardBase} p-8 text-center`}>
           <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
             <Baby className="size-6 text-slate-500 dark:text-slate-400" />
           </div>
@@ -65,8 +62,7 @@ export default async function ParentTodayPage() {
             Your account isn&apos;t connected to a child yet. Ask your daycare to invite you with
             this email — your child&apos;s updates will then appear here automatically.
           </p>
-        </div>
-      </ParentShell>
+      </div>
     );
   }
 
@@ -107,12 +103,7 @@ export default async function ParentTodayPage() {
   const firstName = child.full_name.split(" ")[0];
 
   return (
-    <ParentShell
-      title="Today"
-      childName={child.full_name}
-      childEmoji={child.emoji}
-      childBg={child.avatar_bg}
-    >
+    <>
       <RealtimeRefresh
         subscriptions={[
           { table: "daily_updates", filter: `child_id=eq.${child.id}` },
@@ -162,6 +153,6 @@ export default async function ParentTodayPage() {
           <ParentTimeline updates={updates} />
         </section>
       </div>
-    </ParentShell>
+    </>
   );
 }
