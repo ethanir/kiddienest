@@ -260,6 +260,22 @@ export default async function HomePage() {
             </span>
             <span className="text-xs font-semibold tracking-tight">New update</span>
           </div>
+
+          {/* floating message card — fills the center gap, shows the messaging feature */}
+          <div className="absolute -bottom-9 -left-14 hidden w-56 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl lg:block dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 items-center justify-center rounded-full bg-sky-100 text-sm font-semibold text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
+                L
+              </span>
+              <div className="leading-tight">
+                <p className="text-xs font-semibold tracking-tight">Ms. Lee</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500">Toddler Room</p>
+              </div>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              Mia had a wonderful day — she loved story time! 💛
+            </p>
+          </div>
         </div>
       </section>
 
