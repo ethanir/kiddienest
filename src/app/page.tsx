@@ -192,7 +192,7 @@ export default async function HomePage() {
                   <span className="size-2 rounded-full bg-amber-300" />
                   <span className="size-2 rounded-full bg-emerald-300" />
                   <span className="ml-2 flex-1 rounded-md bg-white px-2 py-0.5 text-[9px] text-slate-400 shadow-sm dark:bg-slate-900 dark:text-slate-500">
-                    app.kiddienest.com
+                    kiddienestapp.com
                   </span>
                 </div>
 
@@ -335,14 +335,6 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* floating accent — top-left, clears the laptop */}
-          <div className="absolute -left-5 -top-3 hidden items-center gap-2 rounded-full border border-slate-200 bg-white py-1.5 pl-2 pr-3 shadow-xl lg:flex dark:border-slate-800 dark:bg-slate-900">
-            <span className="relative flex size-2.5">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
-            </span>
-            <span className="text-[11px] font-semibold tracking-tight">Live update sent</span>
-          </div>
         </div>
       </section>
 

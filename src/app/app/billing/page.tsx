@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, Lock, ShieldCheck, Sparkles } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { startCheckout } from "./actions";
@@ -8,6 +8,14 @@ const ACTIVE = new Set(["active", "trialing"]);
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
+
+const INCLUDED = [
+  "Unlimited children & staff — no per-child fees",
+  "Check-in/out, daily updates, photos & messaging",
+  "Incident reports parents acknowledge",
+  "Your data fully isolated and private",
+  "Free for every parent you invite",
+];
 
 export default async function BillingPage({
   searchParams,
@@ -39,14 +47,18 @@ export default async function BillingPage({
 
   const statusValue = daycare?.subscription_status ?? null;
   const isActive = statusValue ? ACTIVE.has(statusValue) : false;
-  // past_due / canceled / unpaid => returning owner who lapsed (vs first-time pending_setup)
   const isReactivation =
     statusValue === "past_due" ||
     statusValue === "canceled" ||
     statusValue === "unpaid";
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
+    <main className="relative mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
+      {/* soft atmosphere so the page doesn't feel bare */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-24 left-1/2 size-[420px] -translate-x-1/2 rounded-full bg-emerald-300/20 blur-[120px] dark:bg-emerald-500/10" />
+      </div>
+
       {status === "success" && (
         <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
           Payment received — your daycare is being set up. This may take a few seconds; refresh
@@ -85,46 +97,70 @@ export default async function BillingPage({
           </Link>
         </div>
       ) : (
-        <div className={`${cardBase} p-8 shadow-sm`}>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {isReactivation ? "Reactivate your daycare" : "Start your daycare"}
-          </h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            {isReactivation
-              ? "Pick up right where you left off — your children and history are safe."
-              : "Everything your small daycare needs, in one calm place — free for the parents you invite."}
-          </p>
-
-          <div className="mt-6 flex items-baseline gap-1.5">
-            <span className="text-4xl font-bold tracking-tight">$59</span>
-            <span className="text-slate-500 dark:text-slate-400">/ month</span>
+        <div className="animate-in fade-in-0 slide-in-from-bottom-3 duration-700 [animation-fill-mode:both]">
+          <div className="mb-5 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {isReactivation ? "Reactivate your daycare" : "Start your daycare"}
+            </h1>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+              {isReactivation
+                ? "Pick up right where you left off — your children and history are safe."
+                : "One simple plan with everything in the box. Free for the parents you invite."}
+            </p>
           </div>
 
-          <ul className="mt-5 space-y-2.5 text-sm text-slate-600 dark:text-slate-300">
-            {[
-              "Unlimited children & staff",
-              "Check-in, daily updates, photos & messaging",
-              "Incident reports parents acknowledge",
-              "Your data fully isolated and private",
-            ].map((f) => (
-              <li key={f} className="flex items-start gap-2.5">
-                <Check className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                {f}
-              </li>
-            ))}
-          </ul>
+          {/* ===== Pricing card ===== */}
+          <div className={`${cardBase} overflow-hidden shadow-xl shadow-slate-900/5`}>
+            {/* price header band */}
+            <div className="relative overflow-hidden bg-slate-900 px-7 py-6 text-white dark:bg-slate-800">
+              <div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-emerald-500/30 blur-2xl" />
+              <div className="relative">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300 ring-1 ring-inset ring-white/15">
+                  <Sparkles className="size-3" />
+                  KiddieNest · Full plan
+                </span>
+                <div className="mt-3 flex items-end gap-2">
+                  <span className="text-5xl font-bold leading-none tracking-tight">$59</span>
+                  <span className="pb-1 text-sm text-slate-300">/ month</span>
+                </div>
+                <p className="mt-2 text-sm text-slate-300">
+                  Billed monthly · one price per daycare · cancel anytime
+                </p>
+              </div>
+            </div>
 
-          <form action={startCheckout} className="mt-7">
-            <button
-              type="submit"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
-            >
-              {isReactivation ? "Reactivate" : "Subscribe"} <ArrowRight className="size-4" />
-            </button>
-          </form>
-          <p className="mt-3 text-center text-xs text-slate-400 dark:text-slate-500">
-            Secure checkout by Stripe · cancel anytime
-          </p>
+            {/* what's included */}
+            <div className="px-7 py-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                Everything included
+              </p>
+              <ul className="mt-3 space-y-3">
+                {INCLUDED.map((f) => (
+                  <li key={f} className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-200">
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                      <Check className="size-3" strokeWidth={3} />
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <form action={startCheckout} className="mt-6">
+                <button
+                  type="submit"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-emerald-600/30 active:scale-[0.99]"
+                >
+                  {isReactivation ? "Reactivate — $59/month" : "Subscribe — $59/month"}
+                  <ArrowRight className="size-4" />
+                </button>
+              </form>
+
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-slate-400 dark:text-slate-500">
+                <Lock className="size-3" />
+                Secure checkout by Stripe · cancel anytime
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </main>
