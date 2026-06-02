@@ -13,6 +13,8 @@ export async function authenticate(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const code = String(formData.get("code") ?? "").trim();
+  // "parent" (free) or "owner" (daycare → paid). Only meaningful on signup.
+  const accountType = String(formData.get("accountType") ?? "parent");
 
   if (!email || !password) {
     return { error: "Enter your email and password." };
@@ -41,30 +43,53 @@ export async function authenticate(
         message: "Account created. Check your email to confirm, then sign in.",
       };
     }
-  } else {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) return { error: error.message };
+
+    // If an admin invited this email as staff, that takes priority.
+    await supabase.rpc("claim_staff_invite");
+
+    // Unlock code (optional power-user path): provisions an admin account.
+    if (code) {
+      await supabase.rpc("redeem_admin_code", { p_code: code });
+    }
+
+    // Re-read role after any invite/code claim.
+    const { data: claimed } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    // Brand-new daycare owner (not already staff/admin via invite/code):
+    // create their pending daycare and send them to checkout.
+    if (
+      accountType === "owner" &&
+      claimed?.role !== "admin" &&
+      claimed?.role !== "staff"
+    ) {
+      const { error: ownerErr } = await supabase.rpc("start_owner_signup", {
+        p_name: fullName,
+      });
+      if (!ownerErr) redirect("/app/billing");
+    }
+
+    // Owners who already had access (code/invite) → admin area; parents → portal.
+    if (claimed?.role === "admin" || claimed?.role === "staff") {
+      redirect("/app/admin");
+    }
+    redirect("/app/parent");
   }
 
-  // Route straight to the right dashboard (no intermediate redirect hop).
+  // ---- sign in ----
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return { error: error.message };
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   let destination = "/app/parent";
   if (user) {
-    // If an admin invited this email as a teacher, upgrade to staff now.
     await supabase.rpc("claim_staff_invite");
-
-    // Unlock code (signup only): a valid code provisions an admin account.
-    // The code is verified server-side inside the redeem_admin_code function.
-    if (mode === "signup" && code) {
-      await supabase.rpc("redeem_admin_code", { p_code: code });
-    }
-
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -74,7 +99,6 @@ export async function authenticate(
       destination = "/app/admin";
     }
   }
-
   redirect(destination);
 }
 

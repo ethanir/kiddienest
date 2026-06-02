@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
-import { ArrowRight, KeyRound, Loader2, Lock } from "lucide-react";
+import { ArrowRight, Building2, Check, KeyRound, Loader2, Lock, Users } from "lucide-react";
 
 import { authenticate, type AuthState } from "./actions";
 
@@ -27,8 +27,11 @@ const dotGrid = {
   backgroundSize: "26px 26px",
 } as const;
 
+type AccountType = "parent" | "owner";
+
 export default function LoginPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [accountType, setAccountType] = useState<AccountType>("parent");
   const [showCode, setShowCode] = useState(false);
   const [state, formAction, pending] = useActionState<AuthState, FormData>(
     authenticate,
@@ -36,6 +39,7 @@ export default function LoginPage() {
   );
 
   const isSignup = mode === "signup";
+  const isOwner = accountType === "owner";
 
   return (
     <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-slate-50 px-4 py-10 dark:bg-slate-950">
@@ -89,12 +93,33 @@ export default function LoginPage() {
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {isSignup
-              ? "Set up your KiddieNest account in seconds."
+              ? "First, who are you setting this up as?"
               : "Sign in to your KiddieNest account."}
           </p>
 
-          <form action={formAction} className="mt-6 space-y-4">
+          {/* role chooser (signup only) */}
+          {isSignup ? (
+            <div className="mt-5 grid grid-cols-2 gap-2.5">
+              <RoleCard
+                active={!isOwner}
+                onClick={() => setAccountType("parent")}
+                icon={<Users className="size-5" />}
+                title="I'm a parent"
+                sub="Free — follow your child"
+              />
+              <RoleCard
+                active={isOwner}
+                onClick={() => setAccountType("owner")}
+                icon={<Building2 className="size-5" />}
+                title="I run a daycare"
+                sub="Start your workspace"
+              />
+            </div>
+          ) : null}
+
+          <form action={formAction} className="mt-5 space-y-4">
             <input type="hidden" name="mode" value={mode} />
+            <input type="hidden" name="accountType" value={accountType} />
 
             {isSignup ? (
               <Field
@@ -138,7 +163,7 @@ export default function LoginPage() {
                   icon={<Lock className="size-4" />}
                 />
                 <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-                  Daycare admins only — sets up an admin account.
+                  Optional — instantly sets up an admin account without payment.
                 </p>
               </div>
             ) : null}
@@ -163,11 +188,21 @@ export default function LoginPage() {
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 <>
-                  {isSignup ? "Create account" : "Sign in"}
+                  {!isSignup
+                    ? "Sign in"
+                    : isOwner
+                      ? "Continue to payment"
+                      : "Create free account"}
                   <ArrowRight className="size-4" />
                 </>
               )}
             </button>
+
+            {isSignup && isOwner ? (
+              <p className="animate-in fade-in-0 text-center text-xs text-slate-400 duration-300 dark:text-slate-500">
+                $59/month · cancel anytime · free for the parents you invite
+              </p>
+            ) : null}
           </form>
 
           <p className="mt-5 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -229,6 +264,52 @@ export default function LoginPage() {
         }
       `}</style>
     </main>
+  );
+}
+
+function RoleCard({
+  active,
+  onClick,
+  icon,
+  title,
+  sub,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: ReactNode;
+  title: string;
+  sub: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`group relative flex flex-col gap-1.5 rounded-xl border p-3.5 text-left transition-all active:scale-[0.99] ${
+        active
+          ? "border-emerald-500 bg-emerald-50/60 ring-4 ring-emerald-500/10 dark:border-emerald-500/60 dark:bg-emerald-500/10"
+          : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
+      }`}
+    >
+      {active ? (
+        <span className="absolute right-2.5 top-2.5 flex size-4 items-center justify-center rounded-full bg-emerald-600 text-white">
+          <Check className="size-3" strokeWidth={3} />
+        </span>
+      ) : null}
+      <span
+        className={`flex size-9 items-center justify-center rounded-lg transition-colors ${
+          active
+            ? "bg-emerald-600 text-white"
+            : "bg-slate-100 text-slate-500 group-hover:text-slate-700 dark:bg-slate-700 dark:text-slate-400"
+        }`}
+      >
+        {icon}
+      </span>
+      <span className="mt-0.5 block text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+        {title}
+      </span>
+      <span className="block text-xs text-slate-500 dark:text-slate-400">{sub}</span>
+    </button>
   );
 }
 
