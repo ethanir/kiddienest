@@ -132,7 +132,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
 
   return (
     <main className="min-h-dvh bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <div className="mx-auto flex max-w-7xl gap-6 px-3 py-3 md:px-6 md:py-6">
+      <div className="flex gap-6 px-3 py-3 md:px-6 md:py-6">
         {/* ===== Desktop sidebar ===== */}
         <aside className="sticky top-6 hidden h-[calc(100vh-48px)] w-64 shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 lg:flex dark:border-slate-800 dark:bg-slate-900">
           <Link href="/app" className="mb-6 flex items-center gap-3 px-2">
