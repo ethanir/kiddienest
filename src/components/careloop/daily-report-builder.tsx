@@ -17,7 +17,6 @@ import {
   X,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   RoomFilterBar,
@@ -263,66 +262,6 @@ export function DailyReportBuilder({
       </div>
 
       <div className={`${cardBase} p-5 md:p-6`}>
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold">Parent preview</h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              This is what the parent will see on their timeline.
-            </p>
-          </div>
-          <Badge className="shrink-0 rounded-full border-transparent bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-            Live
-          </Badge>
-        </div>
-
-        <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-          <div className="flex items-center gap-3">
-            <div
-              className="flex size-16 items-center justify-center rounded-xl text-3xl"
-              style={{ background: selectedChild?.avatar_bg }}
-            >
-              {selectedChild?.emoji}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-lg font-semibold">
-                {selectedChild?.full_name}
-              </p>
-              <p className="truncate text-sm text-slate-600 dark:text-slate-300">
-                {selectedChild?.room || "—"}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-            <div className="flex items-start gap-3">
-              <div
-                className={cn(
-                  "flex size-12 shrink-0 items-center justify-center rounded-xl",
-                  selectedType.color,
-                )}
-              >
-                <selectedType.icon className="size-6" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{selectedType.title}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {note.trim() || selectedType.defaultNote}
-                </p>
-                {isPhoto && photoPreview ? (
-                  <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={photoPreview}
-                      alt="Selected preview"
-                      className="max-h-56 w-full object-cover"
-                    />
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-
         <form action={formAction}>
           <input type="hidden" name="childId" value={selectedChild?.id ?? ""} />
           <input type="hidden" name="type" value={selectedType.label} />
@@ -422,15 +361,6 @@ export function DailyReportBuilder({
           </button>
         </form>
 
-        <div className="mt-5 rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
-          <div className="flex items-start gap-3">
-            <Baby className="mt-0.5 size-5 shrink-0 text-slate-500 dark:text-slate-400" />
-            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-              After posting, open the parent dashboard to see the update at the top
-              of that child&apos;s timeline.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

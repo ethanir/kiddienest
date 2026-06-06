@@ -124,11 +124,25 @@ export function IncidentsManager({
   return (
     <>
       <div className="mb-5 flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          {incidents.length === 0
-            ? "No incidents logged"
-            : `${incidents.length} ${incidents.length === 1 ? "incident" : "incidents"}`}
-        </p>
+        {incidents.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">No incidents logged</p>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              {incidents.length} logged
+            </span>
+            {incidents.filter((i) => !i.acknowledged_at).length > 0 ? (
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                {incidents.filter((i) => !i.acknowledged_at).length} pending
+              </span>
+            ) : null}
+            {incidents.filter((i) => i.acknowledged_at).length > 0 ? (
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                {incidents.filter((i) => i.acknowledged_at).length} acknowledged
+              </span>
+            ) : null}
+          </div>
+        )}
         {children.length > 0 ? (
           <button
             type="button"
