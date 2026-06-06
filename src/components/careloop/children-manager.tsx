@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   ShieldCheck,
+  Upload,
   Users,
   XCircle,
 } from "lucide-react";
@@ -23,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ChildFamilyDialog } from "@/components/careloop/child-family-dialog";
+import { ChildrenImportDialog } from "@/components/careloop/children-import-dialog";
 import { cn } from "@/lib/utils";
 import { createChild, updateChild, type ChildRecord } from "@/app/app/children/actions";
 import type { RoomRecord } from "@/app/app/rooms/actions";
@@ -82,6 +84,7 @@ export function ChildrenManager({
 
   const [familyChild, setFamilyChild] = useState<ChildRecord | null>(null);
   const [familyOpen, setFamilyOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   function openAdd() {
     setEditingId(null);
@@ -150,14 +153,24 @@ export function ChildrenManager({
             ? "No children yet"
             : `${children.length} ${children.length === 1 ? "child" : "children"}`}
         </p>
-        <button
-          type="button"
-          onClick={openAdd}
-          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
-        >
-          <Plus className="size-4" />
-          Add child
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            <Upload className="size-4" />
+            Import CSV
+          </button>
+          <button
+            type="button"
+            onClick={openAdd}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+          >
+            <Plus className="size-4" />
+            Add child
+          </button>
+        </div>
       </div>
 
       {children.length === 0 ? (
@@ -170,14 +183,24 @@ export function ChildrenManager({
             Add your first child to start tracking attendance and sharing daily updates with their
             parents.
           </p>
-          <button
-            type="button"
-            onClick={openAdd}
-            className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-emerald-600 px-5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
-          >
-            <Plus className="size-4" />
-            Add child
-          </button>
+          <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={openAdd}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-emerald-600 px-5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+            >
+              <Plus className="size-4" />
+              Add child
+            </button>
+            <button
+              type="button"
+              onClick={() => setImportOpen(true)}
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              <Upload className="size-4" />
+              Import CSV
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -361,6 +384,17 @@ export function ChildrenManager({
         child={familyChild}
         open={familyOpen}
         onOpenChange={(o) => setFamilyOpen(o)}
+      />
+
+      <ChildrenImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        rooms={rooms}
+        onImported={(created) =>
+          setChildren((cs) =>
+            [...cs, ...created].sort((a, b) => a.full_name.localeCompare(b.full_name)),
+          )
+        }
       />
     </>
   );

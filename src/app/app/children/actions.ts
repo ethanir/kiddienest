@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { getCurrentRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type ChildRecord = {
@@ -232,4 +233,143 @@ export async function unlinkParent(
     };
   }
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Bulk CSV import (children).
+//
+// Inserts go through the SAME authenticated server client and the SAME columns
+// as createChild, so they ride the existing RLS policies + the daycare_id
+// auto-fill trigger that already passed the security audit — no new security
+// surface, no schema assumptions. Rooms are matched by name (case-insensitive);
+// optionally, room names in the file that don't exist yet are created first.
+// ---------------------------------------------------------------------------
+
+export type ImportChildInput = {
+  full_name: string;
+  room_name: string | null;
+  birthdate: string | null; // ISO (YYYY-MM-DD) or null
+  allergies: string | null;
+  emoji: string;
+  avatar_bg: string;
+};
+
+export type ImportResult = {
+  children?: ChildRecord[];
+  roomsCreated?: number;
+  error?: string;
+};
+
+const IMPORT_CHUNK = 100;
+const MAX_IMPORT_ROWS = 1000;
+
+export async function importChildren(
+  rows: ImportChildInput[],
+  opts: { autoCreateRooms?: boolean } = {},
+): Promise<ImportResult> {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return { error: "There are no valid rows to import." };
+  }
+  if (rows.length > MAX_IMPORT_ROWS) {
+    return {
+      error: `That's a lot of rows at once (max ${MAX_IMPORT_ROWS}). Split the file and import in batches.`,
+    };
+  }
+
+  const supabase = await createClient();
+
+  // Staff/admin only. (RLS would also block this, but fail clearly up front.)
+  const role = await getCurrentRole();
+  if (role !== "staff" && role !== "admin") {
+    return { error: "Only staff can import children." };
+  }
+
+  // Existing rooms for this daycare (RLS-scoped), matched case-insensitively.
+  const { data: roomRows, error: roomErr } = await supabase
+    .from("rooms")
+    .select("id, name, sort_order");
+  if (roomErr) return { error: staffError(roomErr) };
+
+  const rooms = (roomRows ?? []) as { id: string; name: string; sort_order: number }[];
+  const idByName = new Map<string, string>();
+  const nameById = new Map<string, string>();
+  for (const r of rooms) {
+    idByName.set(r.name.trim().toLowerCase(), r.id);
+    nameById.set(r.id, r.name);
+  }
+
+  // Optionally create any room names in the file that don't exist yet.
+  let roomsCreated = 0;
+  if (opts.autoCreateRooms) {
+    const wanted = new Map<string, string>(); // lowercased key -> original casing
+    for (const row of rows) {
+      const n = row.room_name?.trim();
+      if (n && !idByName.has(n.toLowerCase())) wanted.set(n.toLowerCase(), n);
+    }
+    if (wanted.size > 0) {
+      let nextOrder =
+        rooms.reduce((max, r) => Math.max(max, r.sort_order ?? 0), 0) + 1;
+      const toInsert = [...wanted.values()].map((name) => ({
+        name,
+        capacity: null,
+        max_per_staff: null,
+        sort_order: nextOrder++,
+      }));
+      const { data: created, error: createErr } = await supabase
+        .from("rooms")
+        .insert(toInsert)
+        .select("id, name");
+      if (createErr) return { error: staffError(createErr) };
+      for (const r of (created ?? []) as { id: string; name: string }[]) {
+        idByName.set(r.name.trim().toLowerCase(), r.id);
+        nameById.set(r.id, r.name);
+      }
+      roomsCreated = created?.length ?? 0;
+    }
+  }
+
+  // Build child rows using exactly the columns createChild writes.
+  const childRows = rows
+    .filter((r) => r.full_name && r.full_name.trim())
+    .map((r) => {
+      const key = r.room_name?.trim().toLowerCase();
+      const roomId = key ? idByName.get(key) ?? null : null;
+      return {
+        full_name: r.full_name.trim(),
+        room_id: roomId,
+        room: roomId ? nameById.get(roomId) ?? null : null,
+        birthdate: r.birthdate,
+        allergies: r.allergies?.trim() || "None",
+        emoji: r.emoji,
+        avatar_bg: r.avatar_bg,
+      };
+    });
+
+  if (childRows.length === 0) {
+    return { error: "There are no valid rows to import." };
+  }
+
+  // Insert in chunks; collect created rows so the UI can append them.
+  const createdChildren: ChildRecord[] = [];
+  for (let i = 0; i < childRows.length; i += IMPORT_CHUNK) {
+    const slice = childRows.slice(i, i + IMPORT_CHUNK);
+    const { data, error } = await supabase.from("children").insert(slice).select(SELECT);
+    if (error) {
+      const done = createdChildren.length;
+      return {
+        children: createdChildren,
+        roomsCreated,
+        error:
+          done > 0
+            ? `${staffError(error)} (Imported the first ${done} before this error.)`
+            : staffError(error),
+      };
+    }
+    createdChildren.push(...((data ?? []) as ChildRecord[]));
+  }
+
+  revalidatePath("/app/admin");
+  revalidatePath("/app/check-in");
+  revalidatePath("/app/children");
+  return { children: createdChildren, roomsCreated };
 }
