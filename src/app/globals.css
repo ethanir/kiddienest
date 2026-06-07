@@ -207,3 +207,62 @@ html.dark .careloop-subtle {
   background: rgba(15, 23, 42, 0.72);
   border-color: rgba(255, 255, 255, 0.08);
 }
+
+/* KiddieNest dashboard stat-hero: neon glow + ambient flowing light.
+   Each stat sets a --kn-glow rgba via inline style; these rules read it. */
+.kn-stat-ring {
+  box-shadow: 0 0 16px -4px var(--kn-glow, transparent);
+}
+html.dark .kn-stat-ring {
+  box-shadow: 0 0 26px -3px var(--kn-glow, transparent);
+}
+
+.kn-stat-bar {
+  box-shadow: 0 0 10px -1px var(--kn-glow, transparent);
+}
+html.dark .kn-stat-bar {
+  box-shadow: 0 0 16px -1px var(--kn-glow, transparent);
+}
+
+/* Number glow is dark-mode only (a text glow reads as muddy on a light bg). */
+html.dark .kn-stat-number {
+  text-shadow: 0 0 22px var(--kn-glow, transparent);
+}
+
+@keyframes kn-mist-drift {
+  0%,
+  100% {
+    transform: translate3d(-8%, 0, 0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate3d(8%, -6%, 0) scale(1.18);
+    opacity: 0.85;
+  }
+}
+@keyframes kn-mist-drift-2 {
+  0%,
+  100% {
+    transform: translate3d(8%, 4%, 0) scale(1.12);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+    opacity: 0.75;
+  }
+}
+.kn-mist {
+  animation: kn-mist-drift 16s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.kn-mist-2 {
+  animation: kn-mist-drift-2 21s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kn-mist,
+  .kn-mist-2 {
+    animation: none;
+  }
+}
