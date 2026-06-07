@@ -77,18 +77,28 @@ export default async function ParentTodayPage() {
   ]);
   const rows = updateRows ?? [];
 
-  // Resolve photos to short-lived signed URLs. createSignedUrls respects the
+  // Resolve photos to short-lived, resized signed URLs. Signing respects the
   // bucket's RLS, so a parent only ever receives URLs for their own child.
   const paths = rows
     .map((r) => r.photo_path)
     .filter((p): p is string => Boolean(p));
   const signed = new Map<string, string>();
   if (paths.length > 0) {
-    const { data: signedList } = await supabase.storage
-      .from("child-photos")
-      .createSignedUrls(paths, 3600);
-    for (const s of signedList ?? []) {
-      if (s.signedUrl && s.path) signed.set(s.path, s.signedUrl);
+    // Sign each photo individually with an image transform so parents download
+    // a resized, modern-format version instead of the full-size phone-camera
+    // original. The batch createSignedUrls API does not support transforms, so
+    // we sign per path in parallel.
+    const uniquePaths = [...new Set(paths)];
+    const signedPairs = await Promise.all(
+      uniquePaths.map(async (p) => {
+        const { data } = await supabase.storage
+          .from("child-photos")
+          .createSignedUrl(p, 3600, { transform: { width: 1000, quality: 70 } });
+        return [p, data?.signedUrl ?? null] as const;
+      }),
+    );
+    for (const [p, url] of signedPairs) {
+      if (url) signed.set(p, url);
     }
   }
 

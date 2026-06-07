@@ -96,6 +96,7 @@ export function ParentTimeline({ updates }: { updates: TimelineUpdate[] }) {
                   src={item.photo_url}
                   alt={item.title}
                   loading="lazy"
+                  decoding="async"
                   className="max-h-80 w-full bg-slate-100 object-cover dark:bg-slate-800"
                 />
               </a>
