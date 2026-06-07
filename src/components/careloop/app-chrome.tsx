@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -85,6 +85,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
   const userRole = useRole();
   const [email, setEmail] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const moreSheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -107,6 +108,47 @@ export function AppChrome({ children }: { children: ReactNode }) {
         document.body.style.overflow = prev;
       };
     }
+  }, [moreOpen]);
+
+  // Make the mobile More sheet a fully keyboard-accessible dialog: focus moves
+  // into it on open, Escape closes it, Tab is trapped within it, and focus
+  // returns to whatever opened it on close.
+  useEffect(() => {
+    if (!moreOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const getFocusable = () =>
+      Array.from(
+        moreSheetRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((el) => el.offsetParent !== null);
+
+    getFocusable()[0]?.focus();
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setMoreOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const items = getFocusable();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus?.();
+    };
   }, [moreOpen]);
 
   const showChrome = STAFF_PREFIXES.some(
@@ -279,6 +321,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
             className="absolute inset-0 animate-in fade-in-0 bg-slate-900/50 backdrop-blur-sm duration-200"
           />
           <div
+            ref={moreSheetRef}
             className="absolute inset-x-0 bottom-0 animate-in slide-in-from-bottom-4 rounded-t-3xl border-t border-slate-200 bg-white pt-2 duration-300 dark:border-slate-800 dark:bg-slate-900"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
           >
