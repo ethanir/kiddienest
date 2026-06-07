@@ -58,9 +58,9 @@ type FormState = {
   actionTaken: string;
 };
 
-function makeEmpty(children: ChildLite[]): FormState {
+function makeEmpty(childList: ChildLite[]): FormState {
   return {
-    childId: children[0]?.id ?? "",
+    childId: childList[0]?.id ?? "",
     incidentType: "Injury",
     severity: "Minor",
     occurredAt: nowLocal(),
@@ -71,14 +71,14 @@ function makeEmpty(children: ChildLite[]): FormState {
 
 export function IncidentsManager({
   initialIncidents,
-  children,
+  childList,
 }: {
   initialIncidents: IncidentRecord[];
-  children: ChildLite[];
+  childList: ChildLite[];
 }) {
   const [incidents, setIncidents] = useState<IncidentRecord[]>(initialIncidents);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<FormState>(() => makeEmpty(children));
+  const [form, setForm] = useState<FormState>(() => makeEmpty(childList));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -88,7 +88,7 @@ export function IncidentsManager({
   });
 
   function openAdd() {
-    setForm(makeEmpty(children));
+    setForm(makeEmpty(childList));
     setError(null);
     setOpen(true);
   }
@@ -143,7 +143,7 @@ export function IncidentsManager({
             ) : null}
           </div>
         )}
-        {children.length > 0 ? (
+        {childList.length > 0 ? (
           <button
             type="button"
             onClick={openAdd}
@@ -155,7 +155,7 @@ export function IncidentsManager({
         ) : null}
       </div>
 
-      {children.length === 0 ? (
+      {childList.length === 0 ? (
         <div className={cn(cardBase, "px-6 py-12 text-center")}>
           <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
             <ShieldAlert className="size-6 text-slate-500 dark:text-slate-400" />
@@ -257,7 +257,7 @@ export function IncidentsManager({
                 ariaLabel="Child"
                 value={form.childId}
                 onValueChange={(v) => setForm((f) => ({ ...f, childId: v }))}
-                options={children.map((c) => ({ value: c.id, label: c.full_name }))}
+                options={childList.map((c) => ({ value: c.id, label: c.full_name }))}
               />
             </Field>
 

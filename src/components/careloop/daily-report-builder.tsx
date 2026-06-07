@@ -125,12 +125,10 @@ export function DailyReportBuilder({
   // Clear the chosen photo after a successful post, and when leaving Photo type.
   useEffect(() => {
     if (state?.success) clearPhoto();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.success]);
 
   useEffect(() => {
     if (!isPhoto) clearPhoto();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPhoto]);
 
   // Revoke any object URL on unmount.

@@ -20,7 +20,7 @@ export default async function MessagesPage() {
       title="Messages"
       description="Message families directly. Pick a child to open their conversation."
     >
-      <StaffMessages children={data ?? []} rooms={rooms} />
+      <StaffMessages childList={data ?? []} rooms={rooms} />
     </AppShell>
   );
 }

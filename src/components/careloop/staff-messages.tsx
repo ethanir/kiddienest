@@ -25,30 +25,30 @@ const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
 export function StaffMessages({
-  children,
+  childList,
   rooms,
 }: {
-  children: ChildLite[];
+  childList: ChildLite[];
   rooms: RoomLite[];
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = children.find((c) => c.id === selectedId) ?? null;
+  const selected = childList.find((c) => c.id === selectedId) ?? null;
   const { roomId, setRoomId, query, setQuery } = useRoomFilter(rooms);
 
   const roomCounts = useMemo(() => {
     const m: Record<string, number> = {};
-    for (const c of children) if (c.room_id) m[c.room_id] = (m[c.room_id] ?? 0) + 1;
+    for (const c of childList) if (c.room_id) m[c.room_id] = (m[c.room_id] ?? 0) + 1;
     return m;
-  }, [children]);
+  }, [childList]);
   const visible = useMemo(
     () =>
-      children.filter((c) =>
+      childList.filter((c) =>
         matchesRoomAndQuery(c, roomId, query, (x) => x.room_id, (x) => x.full_name),
       ),
-    [children, roomId, query],
+    [childList, roomId, query],
   );
 
-  if (children.length === 0) {
+  if (childList.length === 0) {
     return (
       <div className={cn(cardBase, "p-10 text-center")}>
         <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
@@ -65,12 +65,12 @@ export function StaffMessages({
   return (
     <div className="grid gap-5 lg:grid-cols-[300px_1fr] [&>*]:min-w-0">
       <div className={cn(cardBase, "p-2", selected ? "hidden lg:block" : "block")}>
-        {rooms.length > 0 || children.length > 8 ? (
+        {rooms.length > 0 || childList.length > 8 ? (
           <div className="p-2">
             <RoomFilterBar
               rooms={rooms}
               counts={roomCounts}
-              totalCount={children.length}
+              totalCount={childList.length}
               roomId={roomId}
               onRoomChange={setRoomId}
               query={query}

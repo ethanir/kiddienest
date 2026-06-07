@@ -5,7 +5,6 @@ import {
   Camera,
   Check,
   CheckCircle2,
-  ClipboardList,
   LayoutDashboard,
   Loader2,
   Lock,

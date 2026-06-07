@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import {
   getChildFamily,
   inviteParent,
@@ -42,13 +41,14 @@ export function ChildFamilyDialog({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const childId = child?.id;
   useEffect(() => {
-    if (!open || !child) return;
+    if (!open || !childId) return;
     setError(null);
     setEmail("");
     setLoading(true);
     let active = true;
-    getChildFamily(child.id).then((res) => {
+    getChildFamily(childId).then((res) => {
       if (!active) return;
       setParents(res.parents ?? []);
       setInvites(res.invites ?? []);
@@ -57,7 +57,7 @@ export function ChildFamilyDialog({
     return () => {
       active = false;
     };
-  }, [open, child?.id]);
+  }, [open, childId]);
 
   function submitInvite() {
     if (!child) return;

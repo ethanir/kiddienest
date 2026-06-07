@@ -20,7 +20,6 @@ import {
   X,
 } from "lucide-react";
 
-import { ThemeToggle } from "@/components/careloop/theme-toggle";
 import { useRole } from "@/components/careloop/role-context";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/app/login/actions";

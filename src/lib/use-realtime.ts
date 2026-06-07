@@ -13,7 +13,10 @@ export type RealtimeSub = { table: string; filter?: string };
 // secure and avoids flicker.
 export function useRealtime(subs: RealtimeSub[], onChange: () => void) {
   const cb = useRef(onChange);
-  cb.current = onChange;
+  // Keep the latest callback in a ref without writing it during render.
+  useEffect(() => {
+    cb.current = onChange;
+  }, [onChange]);
 
   // Serialize so the effect only re-subscribes when the tables/filters change.
   const key = JSON.stringify(subs);
