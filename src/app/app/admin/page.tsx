@@ -1,11 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
+  ArrowUpRight,
   Baby,
   Blocks,
   Camera,
   CheckCircle2,
   Clock,
+  CreditCard,
   LogIn,
   Moon,
   ShieldAlert,
@@ -24,6 +26,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth";
 import { getRooms } from "@/app/app/rooms/actions";
 import { cn } from "@/lib/utils";
+import { openBillingPortal } from "@/lib/billing";
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
@@ -110,6 +113,19 @@ export default async function AdminPage() {
   const allergyKids = children.filter(
     (c) => c.allergies && c.allergies.trim().toLowerCase() !== "none",
   );
+
+  // Billing is shown only to the owner (the person who pays). The daycare row is
+  // read under RLS, so it's only ever the caller's own.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: daycare } = await supabase
+    .from("daycares")
+    .select("owner_id, subscription_status, stripe_customer_id")
+    .maybeSingle();
+  const isOwner = Boolean(user && daycare && daycare.owner_id === user.id);
+  const subscriptionStatus = (daycare?.subscription_status as string | null) ?? null;
+  const hasBillingCustomer = Boolean(daycare?.stripe_customer_id);
 
   return (
     <AppShell
@@ -317,6 +333,43 @@ export default async function AdminPage() {
           </section>
         </div>
       </div>
+
+      {isOwner ? (
+        <section className={cn(cardBase, "mt-5 p-5 md:p-6")}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                <CreditCard className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl font-semibold">Subscription</h2>
+                  <SubscriptionBadge status={subscriptionStatus} />
+                </div>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  KiddieNest · $59/month. Update your payment method, view invoices, or cancel
+                  anytime.
+                </p>
+              </div>
+            </div>
+            {hasBillingCustomer ? (
+              <form action={openBillingPortal} className="shrink-0">
+                <button
+                  type="submit"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:w-auto"
+                >
+                  Manage billing
+                  <ArrowUpRight className="size-4" />
+                </button>
+              </form>
+            ) : (
+              <p className="shrink-0 text-sm text-slate-400 dark:text-slate-500">
+                Billing details aren’t available yet.
+              </p>
+            )}
+          </div>
+        </section>
+      ) : null}
     </AppShell>
   );
 }
@@ -369,6 +422,41 @@ function timeAgo(iso: string): string {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const d = new Date(iso);
   return `${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+function SubscriptionBadge({ status }: { status: string | null }) {
+  if (!status) return null;
+  const map: Record<string, { label: string; cls: string }> = {
+    active: {
+      label: "Active",
+      cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+    },
+    trialing: {
+      label: "Trial",
+      cls: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+    },
+    past_due: {
+      label: "Past due",
+      cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
+    },
+    unpaid: {
+      label: "Unpaid",
+      cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
+    },
+    canceled: {
+      label: "Canceled",
+      cls: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400",
+    },
+  };
+  const m = map[status] ?? {
+    label: status,
+    cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+  };
+  return (
+    <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", m.cls)}>
+      {m.label}
+    </span>
+  );
 }
 
 function AttendanceBadge({ status }: { status: string }) {
