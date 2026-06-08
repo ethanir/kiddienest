@@ -1,14 +1,16 @@
 import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
-  ArrowUpRight,
   Baby,
   Blocks,
   Camera,
   CheckCircle2,
+  ChevronRight,
+  ClipboardList,
   Clock,
   CreditCard,
   LogIn,
+  MessageCircle,
   Moon,
   ShieldAlert,
   Sparkles,
@@ -18,9 +20,11 @@ import {
   XCircle,
 } from "lucide-react";
 
+import Link from "next/link";
+
 import { AppShell } from "@/components/careloop/app-shell";
-import { Badge } from "@/components/ui/badge";
 import { CountUp } from "@/components/careloop/count-up";
+import { DashboardGreeting } from "@/components/careloop/dashboard-greeting";
 import { RealtimeRefresh } from "@/components/careloop/realtime-refresh";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRole } from "@/lib/auth";
@@ -109,6 +113,7 @@ export default async function AdminPage() {
     };
   });
   const unassignedCount = children.filter((c) => !c.room_id).length;
+  const understaffedCount = roomOverview.filter((r) => r.understaffed).length;
 
   const allergyKids = children.filter(
     (c) => c.allergies && c.allergies.trim().toLowerCase() !== "none",
@@ -138,238 +143,199 @@ export default async function AdminPage() {
       }
     >
       <RealtimeRefresh subscriptions={[{ table: "children" }, { table: "daily_updates" }]} />
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Stat title="Children" value={total} icon={Baby} tone="sky" index={0} />
-        <Stat title="Checked in" value={checkedIn} icon={CheckCircle2} tone="emerald" index={1} />
-        <Stat title="Not arrived" value={notArrived} icon={Clock} tone="amber" index={2} />
-        <Stat title="Absent" value={absent} icon={XCircle} tone="slate" index={3} />
-      </div>
+      <div className="lg:flex lg:h-[calc(100vh-7rem)] lg:flex-col lg:overflow-hidden">
+        <div className="mb-4 lg:shrink-0">
+          <DashboardGreeting rooms={roomOverview.length} childrenCount={total} />
+        </div>
 
-      {roomOverview.length > 0 ? (
-        <section className={cn(cardBase, "mt-5 p-5 md:p-6")}>
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold">Rooms today</h2>
-            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-              {roomOverview.length} {roomOverview.length === 1 ? "room" : "rooms"}
-            </span>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {roomOverview.map((r) => {
-              const pct = r.enrolled > 0 ? Math.round((r.present / r.enrolled) * 100) : 0;
-              return (
-                <div
-                  key={r.id}
-                  className={cn(
-                    "rounded-xl border p-4",
-                    r.understaffed
-                      ? "border-amber-300 bg-amber-50/50 dark:border-amber-500/40 dark:bg-amber-500/5"
-                      : "border-slate-200 dark:border-slate-800",
-                  )}
-                >
-                  <div className="flex items-baseline justify-between gap-2">
-                    <p className="truncate font-medium">{r.name}</p>
-                    <p className="shrink-0 text-sm text-slate-500 dark:text-slate-400">
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        {r.present}
-                      </span>
-                      <span className="tabular-nums"> / {r.enrolled}</span>
-                      {r.capacity != null ? (
-                        <span className="text-slate-400 dark:text-slate-500">
-                          {" "}
-                          · cap {r.capacity}
-                        </span>
-                      ) : null}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:shrink-0">
+          <Stat title="Children" value={total} icon={Baby} tone="sky" index={0} />
+          <Stat title="Checked in" value={checkedIn} icon={CheckCircle2} tone="emerald" index={1} />
+          <Stat title="Not arrived" value={notArrived} icon={Clock} tone="amber" index={2} />
+          <Stat title="Absent" value={absent} icon={XCircle} tone="slate" index={3} />
+        </div>
+
+        <div className="mt-5 grid gap-5 lg:mt-5 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_340px] lg:grid-rows-1 lg:gap-6">
+          {/* Rooms — fills the left column, scrolls internally on desktop */}
+          <section className={cn(cardBase, "p-5 md:p-6 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden")}>
+            <div className="mb-4 flex items-center justify-between gap-3 lg:shrink-0">
+              <h2 className="text-xl font-semibold">Rooms today</h2>
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                {roomOverview.length} {roomOverview.length === 1 ? "room" : "rooms"}
+              </span>
+            </div>
+            <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
+              {roomOverview.length > 0 ? (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+                    {roomOverview.map((r) => {
+                      const pct = r.enrolled > 0 ? Math.round((r.present / r.enrolled) * 100) : 0;
+                      return (
+                        <div
+                          key={r.id}
+                          className={cn(
+                            "rounded-xl border p-4",
+                            r.understaffed
+                              ? "border-amber-300 bg-amber-50/50 dark:border-amber-500/40 dark:bg-amber-500/5"
+                              : "border-slate-200 dark:border-slate-800",
+                          )}
+                        >
+                          <div className="flex items-baseline justify-between gap-2">
+                            <p className="truncate font-medium">{r.name}</p>
+                            <p className="shrink-0 text-sm text-slate-500 dark:text-slate-400">
+                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                {r.present}
+                              </span>
+                              <span className="tabular-nums"> / {r.enrolled}</span>
+                              {r.capacity != null ? (
+                                <span className="text-slate-400 dark:text-slate-500">
+                                  {" "}
+                                  · cap {r.capacity}
+                                </span>
+                              ) : null}
+                            </p>
+                          </div>
+                          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                            <div
+                              className="h-full rounded-full bg-emerald-500 transition-all"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <div className="mt-2.5 flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                              <Users className="size-3.5" />
+                              {r.staff} {r.staff === 1 ? "teacher" : "teachers"}
+                              {r.staff > 0 ? (
+                                <span className="text-slate-400 dark:text-slate-500">
+                                  · {r.present}:{r.staff}
+                                </span>
+                              ) : null}
+                            </span>
+                            {r.understaffed ? (
+                              <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                                Needs {(r.neededStaff ?? 0) - r.staff} more
+                              </span>
+                            ) : r.maxPer && r.present > 0 ? (
+                              <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                                Ratio ok
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {unassignedCount > 0 ? (
+                    <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                      {unassignedCount} {unassignedCount === 1 ? "child is" : "children are"} not
+                      assigned to a room yet.
                     </p>
-                  </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                    <div
-                      className="h-full rounded-full bg-emerald-500 transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="mt-2.5 flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                      <Users className="size-3.5" />
-                      {r.staff} {r.staff === 1 ? "teacher" : "teachers"}
-                      {r.staff > 0 ? (
-                        <span className="text-slate-400 dark:text-slate-500">
-                          · {r.present}:{r.staff}
+                  ) : null}
+                </>
+              ) : (
+                <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                  No rooms yet. Add rooms to see live attendance by room.
+                </p>
+              )}
+            </div>
+          </section>
+
+          {/* Right rail — scrolls internally on desktop */}
+          <div className="flex flex-col gap-5 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+            <section className={cn(cardBase, "p-5 md:p-6")}>
+              <h2 className="text-xl font-semibold">Quick actions</h2>
+              <div className="mt-4 grid gap-2">
+                <QuickAction href="/app/check-in" icon={CheckCircle2} label="Check in a child" tone="emerald" />
+                <QuickAction href="/app/daily-report" icon={ClipboardList} label="Post an update" tone="sky" />
+                <QuickAction href="/app/messages" icon={MessageCircle} label="Message a family" tone="violet" />
+                <QuickAction href="/app/incidents" icon={ShieldAlert} label="Log an incident" tone="amber" />
+              </div>
+            </section>
+
+            <section className={cn(cardBase, "p-5 md:p-6")}>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Needs attention</h2>
+                <ShieldAlert className="size-5 text-slate-400 dark:text-slate-500" />
+              </div>
+              <div className="mt-3 grid gap-1">
+                <AttnRow href="/app/rooms" label="Understaffed rooms" count={understaffedCount} />
+                <AttnRow href="/app/children" label="Children with allergies" count={allergyKids.length} />
+                <AttnRow href="/app/children" label="Unassigned children" count={unassignedCount} />
+              </div>
+            </section>
+
+            <section className={cn(cardBase, "p-5 md:p-6")}>
+              <h2 className="text-xl font-semibold">Recent activity</h2>
+              {recentUpdates.length === 0 ? (
+                <EmptyState
+                  icon={Sparkles}
+                  title="Nothing logged yet"
+                  body="Daily updates posted by staff will appear here."
+                />
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {recentUpdates.map((u) => {
+                    const meta = updateMeta[u.type] ?? fallbackMeta;
+                    const Icon = meta.icon;
+                    return (
+                      <div key={u.id} className="flex items-start gap-3">
+                        <div
+                          className={cn(
+                            "flex size-9 shrink-0 items-center justify-center rounded-lg",
+                            meta.cls,
+                          )}
+                        >
+                          <Icon className="size-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">
+                            {u.child?.full_name ?? "A child"}
+                          </p>
+                          <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                            {u.title}
+                          </p>
+                        </div>
+                        <span className="shrink-0 pt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                          {timeAgo(u.created_at)}
                         </span>
-                      ) : null}
-                    </span>
-                    {r.understaffed ? (
-                      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
-                        Needs {(r.neededStaff ?? 0) - r.staff} more
-                      </span>
-                    ) : r.maxPer && r.present > 0 ? (
-                      <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-                        Ratio ok
-                      </span>
-                    ) : null}
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-          {unassignedCount > 0 ? (
-            <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-              {unassignedCount} {unassignedCount === 1 ? "child is" : "children are"} not assigned to
-              a room yet.
-            </p>
-          ) : null}
-        </section>
-      ) : null}
+              )}
+            </section>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        <section className={cn(cardBase, "p-5 md:p-6")}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Children</h2>
-            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-              {total} enrolled
-            </span>
-          </div>
-
-          {children.length === 0 ? (
-            <EmptyState
-              icon={Baby}
-              title="No children enrolled yet"
-              body="Once you add child profiles, your roster and live attendance will show here."
-            />
-          ) : (
-            <div className="space-y-3">
-              {children.map((child) => (
-                <div
-                  key={child.id}
-                  className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
-                >
-                  <div
-                    className="flex size-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                    style={{ background: child.avatar_bg ?? "#e2e8f0" }}
-                  >
-                    {child.emoji ?? "🙂"}
+            {isOwner ? (
+              <section className={cn(cardBase, "p-4")}>
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                    <CreditCard className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{child.full_name}</p>
-                    <p className="truncate text-sm text-slate-500 dark:text-slate-400">
-                      {child.room || "Unassigned"}
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold">Subscription</p>
+                      <SubscriptionBadge status={subscriptionStatus} />
+                    </div>
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                      KiddieNest · $59/month
                     </p>
                   </div>
-                  <AttendanceBadge status={child.attendance_status} />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <div className="space-y-5">
-          <section className={cn(cardBase, "p-5 md:p-6")}>
-            <h2 className="text-xl font-semibold">Recent activity</h2>
-            {recentUpdates.length === 0 ? (
-              <EmptyState
-                icon={Sparkles}
-                title="Nothing logged yet"
-                body="Daily updates posted by staff will appear here."
-              />
-            ) : (
-              <div className="mt-4 space-y-4">
-                {recentUpdates.map((u) => {
-                  const meta = updateMeta[u.type] ?? fallbackMeta;
-                  const Icon = meta.icon;
-                  return (
-                    <div key={u.id} className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          "flex size-9 shrink-0 items-center justify-center rounded-lg",
-                          meta.cls,
-                        )}
+                  {hasBillingCustomer ? (
+                    <form action={openBillingPortal} className="shrink-0">
+                      <button
+                        type="submit"
+                        className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                       >
-                        <Icon className="size-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
-                          {u.child?.full_name ?? "A child"}
-                        </p>
-                        <p className="truncate text-sm text-slate-500 dark:text-slate-400">
-                          {u.title}
-                        </p>
-                      </div>
-                      <span className="shrink-0 pt-0.5 text-xs text-slate-400 dark:text-slate-500">
-                        {timeAgo(u.created_at)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-          <section className={cn(cardBase, "p-5 md:p-6")}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Allergy alerts</h2>
-              <ShieldAlert className="size-5 text-slate-400 dark:text-slate-500" />
-            </div>
-            {allergyKids.length === 0 ? (
-              <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                No allergies on file.
-              </p>
-            ) : (
-              <div className="mt-4 space-y-2.5">
-                {allergyKids.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center gap-3 rounded-xl bg-amber-50 p-3 dark:bg-amber-500/10"
-                  >
-                    <AlertTriangle className="size-5 shrink-0 text-amber-600 dark:text-amber-400" />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{c.full_name}</p>
-                      <p className="truncate text-sm text-amber-700 dark:text-amber-400">
-                        {c.allergies}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+                        Manage
+                      </button>
+                    </form>
+                  ) : null}
+                </div>
+              </section>
+            ) : null}
+          </div>
         </div>
       </div>
-
-      {isOwner ? (
-        <section className={cn(cardBase, "mt-5 p-5 md:p-6")}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                <CreditCard className="size-5" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl font-semibold">Subscription</h2>
-                  <SubscriptionBadge status={subscriptionStatus} />
-                </div>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  KiddieNest · $59/month. Update your payment method, view invoices, or cancel
-                  anytime.
-                </p>
-              </div>
-            </div>
-            {hasBillingCustomer ? (
-              <form action={openBillingPortal} className="shrink-0">
-                <button
-                  type="submit"
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:w-auto"
-                >
-                  Manage billing
-                  <ArrowUpRight className="size-4" />
-                </button>
-              </form>
-            ) : (
-              <p className="shrink-0 text-sm text-slate-400 dark:text-slate-500">
-                Billing details aren’t available yet.
-              </p>
-            )}
-          </div>
-        </section>
-      ) : null}
     </AppShell>
   );
 }
@@ -459,38 +425,6 @@ function SubscriptionBadge({ status }: { status: string | null }) {
   );
 }
 
-function AttendanceBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    checked_in: {
-      label: "Checked in",
-      cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
-    },
-    not_arrived: {
-      label: "Not arrived",
-      cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
-    },
-    absent: {
-      label: "Absent",
-      cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-    },
-    checked_out: {
-      label: "Checked out",
-      cls: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400",
-    },
-  };
-  const m = map[status] ?? map.not_arrived;
-  return (
-    <Badge
-      className={cn(
-        "w-fit shrink-0 rounded-full border-transparent px-2.5 py-0.5 text-xs font-medium",
-        m.cls,
-      )}
-    >
-      {m.label}
-    </Badge>
-  );
-}
-
 function Stat({
   title,
   value,
@@ -544,5 +478,66 @@ function EmptyState({
       <p className="font-medium">{title}</p>
       <p className="mx-auto mt-1 max-w-xs text-sm text-slate-500 dark:text-slate-400">{body}</p>
     </div>
+  );
+}
+
+function QuickAction({
+  href,
+  icon: Icon,
+  label,
+  tone,
+}: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  tone: "emerald" | "sky" | "violet" | "amber";
+}) {
+  const tones = {
+    emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
+    sky: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400",
+    violet: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
+    amber: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
+  };
+  return (
+    <Link
+      href={href}
+      className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+    >
+      <span
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center rounded-lg",
+          tones[tone],
+        )}
+      >
+        <Icon className="size-5" />
+      </span>
+      <span className="flex-1 text-sm font-medium">{label}</span>
+      <ChevronRight className="size-4 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-slate-500" />
+    </Link>
+  );
+}
+
+function AttnRow({ href, label, count }: { href: string; label: string; count: number }) {
+  const alert = count > 0;
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
+    >
+      <span className="text-sm text-slate-600 dark:text-slate-300">{label}</span>
+      <span className="flex items-center gap-1.5">
+        <span
+          className={cn(
+            "min-w-[1.5rem] rounded-full px-2 py-0.5 text-center text-xs font-semibold tabular-nums",
+            alert
+              ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
+              : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+          )}
+        >
+          {count}
+        </span>
+        <ChevronRight className="size-4 text-slate-300 dark:text-slate-600" />
+      </span>
+    </Link>
   );
 }
