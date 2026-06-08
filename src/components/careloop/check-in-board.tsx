@@ -97,15 +97,16 @@ export function CheckInBoard({
   );
 
   // Stats reflect the current view (a teacher's room, or the whole center).
-  const counts = useMemo(
-    () => ({
-      in: visible.filter((c) => c.attendance_status === "checked_in").length,
-      notArrived: visible.filter((c) => c.attendance_status === "not_arrived").length,
-      out: visible.filter((c) => c.attendance_status === "checked_out").length,
-      absent: visible.filter((c) => c.attendance_status === "absent").length,
-    }),
-    [visible],
-  );
+  const counts = useMemo(() => {
+    const c = { in: 0, notArrived: 0, out: 0, absent: 0 };
+    for (const child of visible) {
+      if (child.attendance_status === "checked_in") c.in++;
+      else if (child.attendance_status === "not_arrived") c.notArrived++;
+      else if (child.attendance_status === "checked_out") c.out++;
+      else if (child.attendance_status === "absent") c.absent++;
+    }
+    return c;
+  }, [visible]);
 
   // Merge a fresh roster but keep the local copy of any child mid-write, so a
   // live update can't revert a status the user just tapped.
@@ -158,9 +159,16 @@ export function CheckInBoard({
   async function handleResetAll() {
     setError(null);
     setBusy(true);
-    pendingRef.current.clear();
+
+    // Stop any in-flight per-child writes, then mark every child as "pending"
+    // so a realtime echo of the bulk update can't briefly repaint the old
+    // checked-in state before the reset is confirmed — mergeRoster keeps the
+    // local (reset) copy for any pending id.
     chainRef.current.clear();
     const snapshot = children;
+    const ids = children.map((c) => c.id);
+    for (const id of ids) pendingRef.current.add(id);
+
     setChildren((cs) =>
       cs.map((c) => ({
         ...c,
@@ -169,12 +177,24 @@ export function CheckInBoard({
         checked_out_at: null,
       })),
     );
+
     const res = await resetAllAttendance();
-    setBusy(false);
+
     if (res) {
+      // Failed — roll back and release the guard.
+      for (const id of ids) pendingRef.current.delete(id);
       setChildren(snapshot);
       setError(res.error);
+      setBusy(false);
+      return;
     }
+
+    // Confirmed — pull the authoritative roster, release the guard, then show
+    // it. Live updates flow normally from here.
+    const roster = (await getCheckinRoster()) as Child[];
+    for (const id of ids) pendingRef.current.delete(id);
+    setChildren(roster);
+    setBusy(false);
   }
 
   if (children.length === 0) {

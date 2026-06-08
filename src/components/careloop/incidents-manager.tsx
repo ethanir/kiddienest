@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import { Check, Clock, Loader2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
 
@@ -82,6 +82,13 @@ export function IncidentsManager({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  // Header counts — one pass instead of filtering the list four times per render.
+  const { pendingCount, acknowledgedCount } = useMemo(() => {
+    let p = 0;
+    for (const i of incidents) if (!i.acknowledged_at) p++;
+    return { pendingCount: p, acknowledgedCount: incidents.length - p };
+  }, [incidents]);
+
   // Live: new incidents and parent acknowledgements show up on their own.
   useRealtime([{ table: "incidents" }], () => {
     getIncidents().then(setIncidents);
@@ -132,14 +139,14 @@ export function IncidentsManager({
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
               {incidents.length} logged
             </span>
-            {incidents.filter((i) => !i.acknowledged_at).length > 0 ? (
+            {pendingCount > 0 ? (
               <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                {incidents.filter((i) => !i.acknowledged_at).length} pending
+                {pendingCount} pending
               </span>
             ) : null}
-            {incidents.filter((i) => i.acknowledged_at).length > 0 ? (
+            {acknowledgedCount > 0 ? (
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                {incidents.filter((i) => i.acknowledged_at).length} acknowledged
+                {acknowledgedCount} acknowledged
               </span>
             ) : null}
           </div>
