@@ -33,7 +33,7 @@ export function StaffMessages({
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = childList.find((c) => c.id === selectedId) ?? null;
-  const { roomId, setRoomId, query, setQuery } = useRoomFilter(rooms);
+  const { roomId, setRoomId, query, setQuery } = useRoomFilter();
 
   const roomCounts = useMemo(() => {
     const m: Record<string, number> = {};
@@ -64,9 +64,9 @@ export function StaffMessages({
 
   return (
     <div className="grid gap-5 lg:grid-cols-[300px_1fr] [&>*]:min-w-0">
-      <div className={cn(cardBase, "p-2", selected ? "hidden lg:block" : "block")}>
+      <div className={cn(cardBase, "flex flex-col p-2 lg:h-[calc(100vh-7rem)] lg:overflow-hidden", selected ? "hidden lg:flex" : "flex")}>
         {rooms.length > 0 || childList.length > 8 ? (
-          <div className="p-2">
+          <div className="p-2 lg:shrink-0">
             <RoomFilterBar
               rooms={rooms}
               counts={roomCounts}
@@ -79,7 +79,7 @@ export function StaffMessages({
             />
           </div>
         ) : null}
-        <div className="space-y-1">
+        <div className="space-y-1 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
           {visible.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
               No families match{query ? ` “${query}”` : " this room"}.
@@ -118,7 +118,7 @@ export function StaffMessages({
       <div
         className={cn(
           cardBase,
-          "h-[70vh] flex-col p-4 lg:h-[calc(100vh-220px)] lg:min-h-[480px]",
+          "h-[70vh] flex-col p-4 lg:h-[calc(100vh-7rem)] lg:min-h-0",
           selected ? "flex" : "hidden lg:flex",
         )}
       >

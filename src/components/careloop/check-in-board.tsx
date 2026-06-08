@@ -65,7 +65,7 @@ export function CheckInBoard({
   const [children, setChildren] = useState<Child[]>(childProfiles);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const { roomId, setRoomId, query, setQuery } = useRoomFilter(rooms);
+  const { roomId, setRoomId, query, setQuery } = useRoomFilter();
 
   // Tracks children with an in-flight write so a live re-fetch can't overwrite
   // a just-tapped status with stale data; the per-child write queue keeps rapid
@@ -83,9 +83,16 @@ export function CheckInBoard({
   // The children currently shown (room + name filter).
   const visible = useMemo(
     () =>
-      children.filter((c) =>
-        matchesRoomAndQuery(c, roomId, query, (x) => x.room_id, (x) => x.full_name),
-      ),
+      children
+        .filter((c) =>
+          matchesRoomAndQuery(c, roomId, query, (x) => x.room_id, (x) => x.full_name),
+        )
+        // Stable order (name, then id) so two children with the same name never
+        // swap squares when the roster re-fetches after a check-in/out.
+        .sort(
+          (a, b) =>
+            a.full_name.localeCompare(b.full_name) || a.id.localeCompare(b.id),
+        ),
     [children, roomId, query],
   );
 

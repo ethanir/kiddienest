@@ -1,43 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type RoomLite = { id: string; name: string };
 
-const STORAGE_KEY = "kn:selectedRoom";
-
-// Selected-room state shared across staff screens (persisted), plus a search query.
-// "all" means no room filter. If a previously-selected room no longer exists,
-// it gracefully falls back to "all".
-export function useRoomFilter(rooms: RoomLite[]) {
-  const [roomId, setRoomIdState] = useState<string>("all");
+// Per-screen room + name-search filter. "all" means no room filter. The
+// selection is intentionally NOT persisted or shared across staff screens:
+// each page (check-in, reports, messages) starts fresh on "all rooms" so a
+// room chosen on one tab never silently carries over to another.
+export function useRoomFilter() {
+  const [roomId, setRoomId] = useState<string>("all");
   const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === "all" || (saved && rooms.some((r) => r.id === saved))) {
-        setRoomIdState(saved);
-      } else {
-        setRoomIdState("all");
-      }
-    } catch {
-      /* ignore */
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rooms.length]);
-
-  function setRoomId(id: string) {
-    setRoomIdState(id);
-    try {
-      localStorage.setItem(STORAGE_KEY, id);
-    } catch {
-      /* ignore */
-    }
-  }
-
   return { roomId, setRoomId, query, setQuery };
 }
 

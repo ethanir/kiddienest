@@ -12,7 +12,8 @@ export default async function CheckInPage() {
       .select(
         "id, full_name, room, room_id, emoji, avatar_bg, allergies, attendance_status, checked_in_at, checked_out_at",
       )
-      .order("full_name"),
+      .order("full_name")
+      .order("id"),
     getRooms(),
   ]);
 

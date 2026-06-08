@@ -81,7 +81,7 @@ export function DailyReportBuilder({
     [selectedTypeLabel],
   );
 
-  const { roomId, setRoomId, query, setQuery } = useRoomFilter(rooms);
+  const { roomId, setRoomId, query, setQuery } = useRoomFilter();
   const roomCounts = useMemo(() => {
     const m: Record<string, number> = {};
     for (const c of childProfiles) if (c.room_id) m[c.room_id] = (m[c.room_id] ?? 0) + 1;
@@ -159,20 +159,20 @@ export function DailyReportBuilder({
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr] [&>*]:min-w-0">
-      <div className={`${cardBase} p-5 md:p-6`}>
-        <div className="mb-5">
+    <div className="grid gap-5 xl:h-[calc(100vh-7rem)] xl:grid-cols-[0.95fr_1.05fr] xl:grid-rows-1 xl:gap-6 [&>*]:min-w-0">
+      <div className={`${cardBase} p-5 md:p-6 xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden`}>
+        <div className="mb-5 xl:shrink-0">
           <h2 className="text-xl font-semibold">Create parent update</h2>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Pick a child, choose an update type, write a note, and post.
           </p>
         </div>
 
-        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400 xl:shrink-0 dark:text-slate-500">
           1. Select child
         </p>
         {rooms.length > 0 || childProfiles.length > 8 ? (
-          <div className="mb-3">
+          <div className="mb-3 xl:shrink-0">
             <RoomFilterBar
               rooms={rooms}
               counts={roomCounts}
@@ -185,46 +185,50 @@ export function DailyReportBuilder({
             />
           </div>
         ) : null}
-        {visibleChildren.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 py-8 text-center dark:border-slate-700">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              No children match{query ? ` “${query}”` : " this room"}.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {visibleChildren.map((child) => (
-              <button
-                key={child.id}
-                type="button"
-                onClick={() => setSelectedChildId(child.id)}
-                className={cn(
-                  "rounded-xl border p-4 text-left transition-colors",
-                  selectedChildId === child.id
-                    ? "border-emerald-500 bg-emerald-50 dark:border-emerald-500/60 dark:bg-emerald-500/10"
-                    : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex size-12 items-center justify-center rounded-xl text-2xl"
-                    style={{ background: child.avatar_bg }}
-                  >
-                    {child.emoji}
+        <div className="xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
+          {visibleChildren.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 py-8 text-center dark:border-slate-700">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                No children match{query ? ` “${query}”` : " this room"}.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {visibleChildren.map((child) => (
+                <button
+                  key={child.id}
+                  type="button"
+                  onClick={() => setSelectedChildId(child.id)}
+                  className={cn(
+                    "rounded-xl border p-4 text-left transition-colors",
+                    selectedChildId === child.id
+                      ? "border-emerald-500 bg-emerald-50 dark:border-emerald-500/60 dark:bg-emerald-500/10"
+                      : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex size-12 items-center justify-center rounded-xl text-2xl"
+                      style={{ background: child.avatar_bg }}
+                    >
+                      {child.emoji}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{child.full_name}</p>
+                      <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                        {child.room || "—"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{child.full_name}</p>
-                    <p className="truncate text-sm text-slate-500 dark:text-slate-400">
-                      {child.room || "—"}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
-        <p className="mb-3 mt-6 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+      <div className={`${cardBase} p-5 md:p-6 xl:flex xl:min-h-0 xl:flex-col xl:overflow-y-auto`}>
+        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
           2. Select update type
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -257,9 +261,7 @@ export function DailyReportBuilder({
             );
           })}
         </div>
-      </div>
 
-      <div className={`${cardBase} p-5 md:p-6`}>
         <form action={formAction}>
           <input type="hidden" name="childId" value={selectedChild?.id ?? ""} />
           <input type="hidden" name="type" value={selectedType.label} />
