@@ -134,9 +134,9 @@ export function StaffManager({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 lg:flex lg:h-[calc(100vh-3rem)] lg:flex-col lg:overflow-hidden">
       {isAdmin ? (
-        <div className={cn(cardBase, "p-5 md:p-6")}>
+        <div className={cn(cardBase, "p-5 md:p-6 lg:shrink-0")}>
           <div className="mb-4 flex items-center gap-2">
             <UserPlus className="size-5 text-slate-500 dark:text-slate-400" />
             <h2 className="text-lg font-semibold">Add a teacher</h2>
@@ -194,6 +194,7 @@ export function StaffManager({
         </p>
       ) : null}
 
+      <div className="space-y-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
       <div className={cn(cardBase, "p-5 md:p-6")}>
         <h2 className="mb-4 text-lg font-semibold">Your team</h2>
         <div className="space-y-2">
@@ -320,6 +321,7 @@ export function StaffManager({
           </div>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }

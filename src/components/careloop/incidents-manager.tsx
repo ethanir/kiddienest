@@ -123,7 +123,8 @@ export function IncidentsManager({
 
   return (
     <>
-      <div className="mb-5 flex items-center justify-between gap-3">
+      <div className="lg:flex lg:h-[calc(100vh-3rem)] lg:flex-col lg:overflow-hidden">
+      <div className="mb-5 flex items-center justify-between gap-3 lg:shrink-0">
         {incidents.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">No incidents logged</p>
         ) : (
@@ -177,7 +178,7 @@ export function IncidentsManager({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
           {incidents.map((i) => (
             <article key={i.id} className={cn(cardBase, "animate-in fade-in-0 slide-in-from-bottom-1 p-5 duration-300")}>
               <div className="flex items-start gap-4">
@@ -236,6 +237,7 @@ export function IncidentsManager({
           ))}
         </div>
       )}
+      </div>
 
       <Dialog
         open={open}

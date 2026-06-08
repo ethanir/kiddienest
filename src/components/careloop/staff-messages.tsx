@@ -76,6 +76,7 @@ export function StaffMessages({
               query={query}
               onQueryChange={setQuery}
               searchPlaceholder="Search families…"
+              roomControl="dropdown"
             />
           </div>
         ) : null}

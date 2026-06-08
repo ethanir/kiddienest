@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Search, X } from "lucide-react";
+
+import { SelectField } from "@/components/careloop/select-field";
 import { cn } from "@/lib/utils";
 
 export type RoomLite = { id: string; name: string };
@@ -39,6 +41,7 @@ export function RoomFilterBar({
   query,
   onQueryChange,
   searchPlaceholder = "Search children…",
+  roomControl = "chips",
 }: {
   rooms: RoomLite[];
   counts?: Record<string, number>;
@@ -48,6 +51,7 @@ export function RoomFilterBar({
   query: string;
   onQueryChange: (q: string) => void;
   searchPlaceholder?: string;
+  roomControl?: "chips" | "dropdown";
 }) {
   // With no rooms defined yet, only show the search box.
   return (
@@ -75,23 +79,47 @@ export function RoomFilterBar({
       </div>
 
       {rooms.length > 0 ? (
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <Chip
-            active={roomId === "all"}
-            label="All rooms"
-            count={totalCount}
-            onClick={() => onRoomChange("all")}
+        roomControl === "dropdown" ? (
+          <SelectField
+            ariaLabel="Filter by room"
+            value={roomId}
+            onValueChange={onRoomChange}
+            options={[
+              {
+                value: "all",
+                label:
+                  typeof totalCount === "number"
+                    ? `All rooms · ${totalCount}`
+                    : "All rooms",
+              },
+              ...rooms.map((r) => {
+                const n = counts?.[r.id];
+                return {
+                  value: r.id,
+                  label: typeof n === "number" ? `${r.name} · ${n}` : r.name,
+                };
+              }),
+            ]}
           />
-          {rooms.map((r) => (
+        ) : (
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <Chip
-              key={r.id}
-              active={roomId === r.id}
-              label={r.name}
-              count={counts?.[r.id]}
-              onClick={() => onRoomChange(r.id)}
+              active={roomId === "all"}
+              label="All rooms"
+              count={totalCount}
+              onClick={() => onRoomChange("all")}
             />
-          ))}
-        </div>
+            {rooms.map((r) => (
+              <Chip
+                key={r.id}
+                active={roomId === r.id}
+                label={r.name}
+                count={counts?.[r.id]}
+                onClick={() => onRoomChange(r.id)}
+              />
+            ))}
+          </div>
+        )
       ) : null}
     </div>
   );

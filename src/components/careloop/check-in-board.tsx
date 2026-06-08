@@ -192,7 +192,8 @@ export function CheckInBoard({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 lg:flex lg:h-[calc(100vh-3rem)] lg:flex-col lg:overflow-hidden">
+      <div className="lg:shrink-0">
       <RoomFilterBar
         rooms={rooms}
         counts={roomCounts}
@@ -203,16 +204,17 @@ export function CheckInBoard({
         onQueryChange={setQuery}
         searchPlaceholder="Search children…"
       />
+      </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:shrink-0">
         <MiniStatus label="Checked in" value={counts.in} tone="green" />
         <MiniStatus label="Not arrived" value={counts.notArrived} tone="amber" />
         <MiniStatus label="Checked out" value={counts.out} tone="purple" />
         <MiniStatus label="Absent" value={counts.absent} tone="gray" />
       </div>
 
-      <div className={cn(cardBase, "p-5 md:p-6")}>
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className={cn(cardBase, "p-5 md:p-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden")}>
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:shrink-0">
           <div>
             <h2 className="text-xl font-semibold">Children</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -235,7 +237,7 @@ export function CheckInBoard({
         </div>
 
         {error ? (
-          <p className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">
+          <p className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400 lg:shrink-0">
             {error}
           </p>
         ) : null}
@@ -247,7 +249,7 @@ export function CheckInBoard({
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
             {visible.map((child, index) => {
               const isIn = child.attendance_status === "checked_in";
               const isOut = child.attendance_status === "checked_out";

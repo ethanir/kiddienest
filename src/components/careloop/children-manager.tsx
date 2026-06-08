@@ -147,7 +147,8 @@ export function ChildrenManager({
 
   return (
     <>
-      <div className="mb-5 flex items-center justify-between gap-3">
+      <div className="lg:flex lg:h-[calc(100vh-3rem)] lg:flex-col lg:overflow-hidden">
+      <div className="mb-5 flex items-center justify-between gap-3 lg:shrink-0">
         <p className="text-sm text-slate-500 dark:text-slate-400">
           {children.length === 0
             ? "No children yet"
@@ -203,7 +204,7 @@ export function ChildrenManager({
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
           {children.map((child) => {
             const hasAllergy =
               !!child.allergies && child.allergies.trim().toLowerCase() !== "none";
@@ -256,6 +257,7 @@ export function ChildrenManager({
           })}
         </div>
       )}
+      </div>
 
       <Dialog
         open={open}
