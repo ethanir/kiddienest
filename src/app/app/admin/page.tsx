@@ -143,19 +143,19 @@ export default async function AdminPage() {
       }
     >
       <RealtimeRefresh subscriptions={[{ table: "children" }, { table: "daily_updates" }]} />
-      <div className="lg:flex lg:h-[calc(100vh-7rem)] lg:flex-col lg:overflow-hidden">
-        <div className="mb-4 lg:shrink-0">
+      <div className="lg:flex lg:h-[calc(100vh-3rem)] lg:flex-col lg:overflow-hidden">
+        <div className="mb-3 lg:shrink-0">
           <DashboardGreeting rooms={roomOverview.length} childrenCount={total} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:shrink-0">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:shrink-0">
           <Stat title="Children" value={total} icon={Baby} tone="sky" index={0} />
           <Stat title="Checked in" value={checkedIn} icon={CheckCircle2} tone="emerald" index={1} />
           <Stat title="Not arrived" value={notArrived} icon={Clock} tone="amber" index={2} />
           <Stat title="Absent" value={absent} icon={XCircle} tone="slate" index={3} />
         </div>
 
-        <div className="mt-5 grid gap-5 lg:mt-5 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_340px] lg:grid-rows-1 lg:gap-6">
+        <div className="mt-4 grid gap-4 lg:mt-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_340px] lg:grid-rows-1 lg:gap-5">
           {/* Rooms — fills the left column, scrolls internally on desktop */}
           <section className={cn(cardBase, "p-5 md:p-6 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden")}>
             <div className="mb-4 flex items-center justify-between gap-3 lg:shrink-0">
@@ -240,62 +240,62 @@ export default async function AdminPage() {
             </div>
           </section>
 
-          {/* Right rail — scrolls internally on desktop */}
-          <div className="flex flex-col gap-5 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
-            <section className={cn(cardBase, "p-5 md:p-6")}>
-              <h2 className="text-xl font-semibold">Quick actions</h2>
-              <div className="mt-4 grid gap-2">
-                <QuickAction href="/app/check-in" icon={CheckCircle2} label="Check in a child" tone="emerald" />
-                <QuickAction href="/app/daily-report" icon={ClipboardList} label="Post an update" tone="sky" />
-                <QuickAction href="/app/messages" icon={MessageCircle} label="Message a family" tone="violet" />
-                <QuickAction href="/app/incidents" icon={ShieldAlert} label="Log an incident" tone="amber" />
+          {/* Right rail — packed so it fits one screen without scrolling */}
+          <div className="flex flex-col gap-4 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+            <section className={cn(cardBase, "p-4")}>
+              <h2 className="text-base font-semibold">Quick actions</h2>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <QuickAction href="/app/check-in" icon={CheckCircle2} label="Check in" tone="emerald" />
+                <QuickAction href="/app/daily-report" icon={ClipboardList} label="Post update" tone="sky" />
+                <QuickAction href="/app/messages" icon={MessageCircle} label="Message" tone="violet" />
+                <QuickAction href="/app/incidents" icon={ShieldAlert} label="Incident" tone="amber" />
               </div>
             </section>
 
-            <section className={cn(cardBase, "p-5 md:p-6")}>
+            <section className={cn(cardBase, "p-4")}>
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Needs attention</h2>
-                <ShieldAlert className="size-5 text-slate-400 dark:text-slate-500" />
+                <h2 className="text-base font-semibold">Needs attention</h2>
+                <ShieldAlert className="size-4 text-slate-400 dark:text-slate-500" />
               </div>
-              <div className="mt-3 grid gap-1">
+              <div className="mt-2 grid gap-0.5">
                 <AttnRow href="/app/rooms" label="Understaffed rooms" count={understaffedCount} />
                 <AttnRow href="/app/children" label="Children with allergies" count={allergyKids.length} />
                 <AttnRow href="/app/children" label="Unassigned children" count={unassignedCount} />
               </div>
             </section>
 
-            <section className={cn(cardBase, "p-5 md:p-6")}>
-              <h2 className="text-xl font-semibold">Recent activity</h2>
+            <section className={cn(cardBase, "p-4")}>
+              <h2 className="text-base font-semibold">Recent activity</h2>
               {recentUpdates.length === 0 ? (
                 <EmptyState
                   icon={Sparkles}
                   title="Nothing logged yet"
-                  body="Daily updates posted by staff will appear here."
+                  body="Daily updates from staff show up here."
                 />
               ) : (
-                <div className="mt-4 space-y-4">
-                  {recentUpdates.map((u) => {
+                <div className="mt-3 space-y-3">
+                  {recentUpdates.slice(0, 3).map((u) => {
                     const meta = updateMeta[u.type] ?? fallbackMeta;
                     const Icon = meta.icon;
                     return (
                       <div key={u.id} className="flex items-start gap-3">
                         <div
                           className={cn(
-                            "flex size-9 shrink-0 items-center justify-center rounded-lg",
+                            "flex size-8 shrink-0 items-center justify-center rounded-lg",
                             meta.cls,
                           )}
                         >
-                          <Icon className="size-5" />
+                          <Icon className="size-4" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium">
                             {u.child?.full_name ?? "A child"}
                           </p>
-                          <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                             {u.title}
                           </p>
                         </div>
-                        <span className="shrink-0 pt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
                           {timeAgo(u.created_at)}
                         </span>
                       </div>
@@ -448,15 +448,20 @@ function Stat({
   return (
     <div
       style={{ animationDelay: `${index * 60}ms` }}
-      className={cn(cardBase, "animate-in fade-in-0 slide-in-from-bottom-2 p-5 duration-500 [animation-fill-mode:both]")}
+      className={cn(
+        cardBase,
+        "flex items-center gap-3 p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500 [animation-fill-mode:both]",
+      )}
     >
-      <div className={cn("mb-4 flex size-11 items-center justify-center rounded-xl", tones[tone])}>
-        <Icon className="size-6" />
+      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", tones[tone])}>
+        <Icon className="size-5" />
       </div>
-      <p className="text-3xl font-semibold tabular-nums">
-        <CountUp value={value} />
-      </p>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{title}</p>
+      <div className="min-w-0">
+        <p className="text-2xl font-semibold tabular-nums leading-tight">
+          <CountUp value={value} />
+        </p>
+        <p className="truncate text-sm text-slate-500 dark:text-slate-400">{title}</p>
+      </div>
     </div>
   );
 }
@@ -471,12 +476,14 @@ function EmptyState({
   body: string;
 }) {
   return (
-    <div className="py-8 text-center">
-      <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-        <Icon className="size-6 text-slate-500 dark:text-slate-400" />
+    <div className="mt-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
+        <Icon className="size-4 text-slate-500 dark:text-slate-400" />
       </div>
-      <p className="font-medium">{title}</p>
-      <p className="mx-auto mt-1 max-w-xs text-sm text-slate-500 dark:text-slate-400">{body}</p>
+      <div className="min-w-0">
+        <p className="text-sm font-medium">{title}</p>
+        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{body}</p>
+      </div>
     </div>
   );
 }
@@ -501,18 +508,12 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+      className="flex items-center gap-2.5 rounded-xl border border-slate-200 p-2.5 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
     >
-      <span
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-lg",
-          tones[tone],
-        )}
-      >
-        <Icon className="size-5" />
+      <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", tones[tone])}>
+        <Icon className="size-4" />
       </span>
-      <span className="flex-1 text-sm font-medium">{label}</span>
-      <ChevronRight className="size-4 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-slate-500" />
+      <span className="truncate text-sm font-medium">{label}</span>
     </Link>
   );
 }
@@ -522,7 +523,7 @@ function AttnRow({ href, label, count }: { href: string; label: string; count: n
   return (
     <Link
       href={href}
-      className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
+      className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
     >
       <span className="text-sm text-slate-600 dark:text-slate-300">{label}</span>
       <span className="flex items-center gap-1.5">

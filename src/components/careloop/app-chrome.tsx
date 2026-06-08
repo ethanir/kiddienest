@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { useRole } from "@/components/careloop/role-context";
+import { ThemeToggle } from "@/components/careloop/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/app/login/actions";
 import { cn } from "@/lib/utils";
@@ -233,6 +234,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
                 {email ?? "Loading…"}
               </p>
             </div>
+            <ThemeToggle className="mt-3 w-full justify-center" />
             <form action={signOut} className="mt-3">
               <button
                 type="submit"
@@ -394,6 +396,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
             </div>
 
             <div className="mt-1 border-t border-slate-200 px-5 pt-4 dark:border-slate-800">
+              <ThemeToggle className="mb-3 w-full justify-center" />
               <div className="flex items-center gap-3">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                   {email ? email[0]?.toUpperCase() : "·"}

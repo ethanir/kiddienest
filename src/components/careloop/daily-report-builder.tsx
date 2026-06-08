@@ -159,7 +159,7 @@ export function DailyReportBuilder({
   }
 
   return (
-    <div className="grid gap-5 xl:h-[calc(100vh-7rem)] xl:grid-cols-[0.95fr_1.05fr] xl:grid-rows-1 xl:gap-6 [&>*]:min-w-0">
+    <div className="grid gap-5 xl:h-[calc(100vh-3rem)] xl:grid-cols-[0.95fr_1.05fr] xl:grid-rows-1 xl:gap-6 [&>*]:min-w-0">
       <div className={`${cardBase} p-5 md:p-6 xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden`}>
         <div className="mb-5 xl:shrink-0">
           <h2 className="text-xl font-semibold">Create parent update</h2>

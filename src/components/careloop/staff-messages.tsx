@@ -64,7 +64,7 @@ export function StaffMessages({
 
   return (
     <div className="grid gap-5 lg:grid-cols-[300px_1fr] [&>*]:min-w-0">
-      <div className={cn(cardBase, "flex flex-col p-2 lg:h-[calc(100vh-7rem)] lg:overflow-hidden", selected ? "hidden lg:flex" : "flex")}>
+      <div className={cn(cardBase, "flex flex-col p-2 lg:h-[calc(100vh-3rem)] lg:overflow-hidden", selected ? "hidden lg:flex" : "flex")}>
         {rooms.length > 0 || childList.length > 8 ? (
           <div className="p-2 lg:shrink-0">
             <RoomFilterBar
@@ -118,7 +118,7 @@ export function StaffMessages({
       <div
         className={cn(
           cardBase,
-          "h-[70vh] flex-col p-4 lg:h-[calc(100vh-7rem)] lg:min-h-0",
+          "h-[70vh] flex-col p-4 lg:h-[calc(100vh-3rem)] lg:min-h-0",
           selected ? "flex" : "hidden lg:flex",
         )}
       >
