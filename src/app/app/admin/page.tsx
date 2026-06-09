@@ -27,7 +27,7 @@ import { CountUp } from "@/components/careloop/count-up";
 import { DashboardGreeting } from "@/components/careloop/dashboard-greeting";
 import { RealtimeRefresh } from "@/components/careloop/realtime-refresh";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentRole } from "@/lib/auth";
+import { getCurrentRole, getCurrentUser } from "@/lib/auth";
 import { getRooms } from "@/app/app/rooms/actions";
 import { cn } from "@/lib/utils";
 import { openBillingPortal } from "@/lib/billing";
@@ -38,10 +38,7 @@ const cardBase =
 type ChildRow = {
   id: string;
   full_name: string;
-  room: string | null;
   room_id: string | null;
-  emoji: string | null;
-  avatar_bg: string | null;
   allergies: string | null;
   attendance_status: string;
 };
@@ -56,21 +53,40 @@ type UpdateRow = {
 
 export default async function AdminPage() {
   const supabase = await createClient();
-  const viewerRole = await getCurrentRole();
-  const isAdmin = viewerRole === "admin";
 
-  const [{ data: childData }, { data: updateData }, rooms] = await Promise.all([
+  // Everything the dashboard needs, fetched in ONE parallel wave. The children
+  // select is trimmed to exactly the columns the stats/lookups use (no emoji,
+  // avatar or room name — nothing here renders them) and is unordered, since
+  // the roster itself is never listed on this screen. The daycare row is read
+  // under RLS so it's only ever the caller's own; getCurrentRole/getCurrentUser
+  // share a single cached auth call.
+  const [
+    viewerRole,
+    user,
+    { data: childData },
+    { data: updateData },
+    rooms,
+    { data: staffRows },
+    { data: daycare },
+  ] = await Promise.all([
+    getCurrentRole(),
+    getCurrentUser(),
     supabase
       .from("children")
-      .select("id, full_name, room, room_id, emoji, avatar_bg, allergies, attendance_status")
-      .order("full_name"),
+      .select("id, full_name, room_id, allergies, attendance_status"),
     supabase
       .from("daily_updates")
       .select("id, type, title, created_at, child_id")
       .order("created_at", { ascending: false })
       .limit(6),
     getRooms(),
+    supabase.from("profiles").select("room_id").in("role", ["staff", "admin"]),
+    supabase
+      .from("daycares")
+      .select("owner_id, subscription_status, stripe_customer_id")
+      .maybeSingle(),
   ]);
+  const isAdmin = viewerRole === "admin";
 
   const children = (childData ?? []) as ChildRow[];
   const updates = (updateData ?? []) as UpdateRow[];
@@ -84,10 +100,6 @@ export default async function AdminPage() {
   const recentUpdates = updates.map((u) => ({ ...u, child: childById.get(u.child_id) ?? null }));
 
   // Per-room overview (present vs enrolled, plus staffing ratio) for the dashboard.
-  const { data: staffRows } = await supabase
-    .from("profiles")
-    .select("room_id")
-    .in("role", ["staff", "admin"]);
   const staffCounts: Record<string, number> = {};
   for (const s of (staffRows ?? []) as { room_id: string | null }[]) {
     if (s.room_id) staffCounts[s.room_id] = (staffCounts[s.room_id] ?? 0) + 1;
@@ -119,15 +131,8 @@ export default async function AdminPage() {
     (c) => c.allergies && c.allergies.trim().toLowerCase() !== "none",
   );
 
-  // Billing is shown only to the owner (the person who pays). The daycare row is
-  // read under RLS, so it's only ever the caller's own.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: daycare } = await supabase
-    .from("daycares")
-    .select("owner_id, subscription_status, stripe_customer_id")
-    .maybeSingle();
+  // Billing is shown only to the owner (the person who pays); the daycare row
+  // was fetched above under RLS, so it's only ever the caller's own.
   const isOwner = Boolean(user && daycare && daycare.owner_id === user.id);
   const subscriptionStatus = (daycare?.subscription_status as string | null) ?? null;
   const hasBillingCustomer = Boolean(daycare?.stripe_customer_id);

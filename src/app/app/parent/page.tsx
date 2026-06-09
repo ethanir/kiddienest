@@ -67,12 +67,19 @@ export default async function ParentTodayPage() {
   }
 
   const supabase = await createClient();
+
+  // How many timeline entries (and therefore photo-URL signings) one view
+  // loads. Unbounded, this query — re-run on every realtime refresh — would
+  // grow forever as daily updates accumulate; 50 covers well over a week of
+  // typical activity on a screen titled "Today's timeline".
+  const TIMELINE_LIMIT = 50;
   const [{ data: updateRows }, incidents] = await Promise.all([
     supabase
       .from("daily_updates")
       .select("id, type, title, body, created_at, photo_path")
       .eq("child_id", child.id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(TIMELINE_LIMIT),
     getIncidentsForChild(child.id),
   ]);
   const rows = updateRows ?? [];

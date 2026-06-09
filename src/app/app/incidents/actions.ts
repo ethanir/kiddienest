@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getCurrentRole } from "@/lib/auth";
+import { getCurrentRole, getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type IncidentRecord = {
@@ -53,31 +53,28 @@ async function shapeIncidents(
     new Set(rows.map((r) => r.reported_by).filter((v): v is string => Boolean(v))),
   );
 
+  // Both lookups are independent, so fire them in one parallel wave instead of
+  // paying two sequential round trips on every incidents fetch.
+  const [childRes, reporterRes] = await Promise.all([
+    supabase.from("children").select("id, full_name, emoji, avatar_bg").in("id", childIds),
+    reporterIds.length > 0
+      ? supabase.from("profiles").select("id, full_name").in("id", reporterIds)
+      : null,
+  ]);
+
   const childById = new Map<string, { full_name: string; emoji: string | null; avatar_bg: string | null }>();
-  if (childIds.length > 0) {
-    const { data } = await supabase
-      .from("children")
-      .select("id, full_name, emoji, avatar_bg")
-      .in("id", childIds);
-    for (const c of (data ?? []) as {
-      id: string;
-      full_name: string;
-      emoji: string | null;
-      avatar_bg: string | null;
-    }[]) {
-      childById.set(c.id, { full_name: c.full_name, emoji: c.emoji, avatar_bg: c.avatar_bg });
-    }
+  for (const c of (childRes.data ?? []) as {
+    id: string;
+    full_name: string;
+    emoji: string | null;
+    avatar_bg: string | null;
+  }[]) {
+    childById.set(c.id, { full_name: c.full_name, emoji: c.emoji, avatar_bg: c.avatar_bg });
   }
 
   const nameById = new Map<string, string | null>();
-  if (reporterIds.length > 0) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", reporterIds);
-    for (const p of (data ?? []) as { id: string; full_name: string | null }[]) {
-      nameById.set(p.id, p.full_name);
-    }
+  for (const p of (reporterRes?.data ?? []) as { id: string; full_name: string | null }[]) {
+    nameById.set(p.id, p.full_name);
   }
 
   return rows.map((r) => {
@@ -128,9 +125,7 @@ export async function createIncident(input: {
   occurredAt?: string;
 }): Promise<{ incident?: IncidentRecord; error?: string }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return { error: "You appear to be signed out." };
 
   const role = await getCurrentRole();

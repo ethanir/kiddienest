@@ -68,6 +68,12 @@ export async function createChild(
 
   const supabase = await createClient();
   const rName = await roomName(supabase, input.room_id);
+  // A provided room id must resolve under RLS. If it doesn't, it isn't a room
+  // in this daycare (or it was just deleted) — reject instead of writing a
+  // cross-tenant or dangling room_id onto the child.
+  if (input.room_id && rName === null) {
+    return { error: "That room could not be found. Refresh and try again." };
+  }
   const { data, error } = await supabase
     .from("children")
     .insert({
@@ -98,6 +104,10 @@ export async function updateChild(
 
   const supabase = await createClient();
   const rName = await roomName(supabase, input.room_id);
+  // Same guard as createChild: a provided room id must resolve under RLS.
+  if (input.room_id && rName === null) {
+    return { error: "That room could not be found. Refresh and try again." };
+  }
   const { data, error } = await supabase
     .from("children")
     .update({

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getCurrentRole, type AppRole } from "@/lib/auth";
+import { getCurrentRole, getCurrentUser, type AppRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type StaffMember = {
@@ -26,22 +26,25 @@ export async function getStaff(): Promise<{
   viewerRole: AppRole;
 }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const viewerRole = await getCurrentRole();
 
-  const { data: memberRows } = await supabase
-    .from("profiles")
-    .select("id, full_name, email, role, room_id")
-    .in("role", ["staff", "admin"])
-    .order("full_name");
-
-  const { data: inviteRows } = await supabase
-    .from("staff_invites")
-    .select("email, role, created_at")
-    .is("claimed_at", null)
-    .order("created_at", { ascending: false });
+  // One parallel wave: the user and role share a single cached auth call
+  // (getCurrentRole reads through getCurrentUser), and the two table reads no
+  // longer wait on each other.
+  const [user, viewerRole, { data: memberRows }, { data: inviteRows }] =
+    await Promise.all([
+      getCurrentUser(),
+      getCurrentRole(),
+      supabase
+        .from("profiles")
+        .select("id, full_name, email, role, room_id")
+        .in("role", ["staff", "admin"])
+        .order("full_name"),
+      supabase
+        .from("staff_invites")
+        .select("email, role, created_at")
+        .is("claimed_at", null)
+        .order("created_at", { ascending: false }),
+    ]);
 
   return {
     members: (memberRows ?? []) as StaffMember[],

@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-
 import { createClient } from "@/lib/supabase/server";
 
 export type ParentChild = {
@@ -15,7 +13,7 @@ export type ParentChild = {
 };
 
 // Loads the signed-in parent's first linked child (RLS guarantees it's theirs).
-// Also claims any pending guardian invites first. Returns null if none linked.
+// Limited to one row because that's all the parent screens currently use.
 export async function loadParentChild(): Promise<ParentChild | null> {
   const supabase = await createClient();
 
@@ -24,18 +22,8 @@ export async function loadParentChild(): Promise<ParentChild | null> {
     .select(
       "id, full_name, room, emoji, avatar_bg, allergies, attendance_status, checked_in_at, checked_out_at",
     )
-    .order("full_name");
+    .order("full_name")
+    .limit(1);
 
   return (data?.[0] as ParentChild | undefined) ?? null;
-}
-
-// Guards a parent route: ensures the user is signed in. (Section access is also
-// enforced by middleware; this is a belt-and-suspenders for direct loads.)
-export async function requireParentUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  return user;
 }

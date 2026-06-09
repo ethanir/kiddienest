@@ -37,11 +37,19 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient();
 
   // Idempotency: Stripe may deliver an event more than once. Record the id
-  // first; a duplicate-key error means we've already handled it.
+  // first; a unique-violation (Postgres 23505) means we've already handled it.
+  // Any OTHER insert failure (connection blip, pool exhaustion) must NOT be
+  // acknowledged — returning 500 makes Stripe retry, so a transient database
+  // error can never silently drop a billing event.
   const { error: dupErr } = await admin
     .from("stripe_events")
     .insert({ id: event.id, type: event.type });
-  if (dupErr) return new Response("ok (duplicate)", { status: 200 });
+  if (dupErr) {
+    if (dupErr.code === "23505") {
+      return new Response("ok (duplicate)", { status: 200 });
+    }
+    return new Response("could not record event", { status: 500 });
+  }
 
   try {
     switch (event.type) {

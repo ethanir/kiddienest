@@ -60,21 +60,35 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Role-gating: keep parents in the parent area and staff in the staff area.
+  // Role + billing gating. Everything below needs the caller's profile (and,
+  // for staff/admin, their daycare's subscription), so fetch BOTH in one
+  // parallel wave — previously this was up to three sequential queries (the
+  // profile twice, then the daycare) on every single /app request. The daycare
+  // read is deliberately unfiltered: RLS scopes it to the caller's own daycare
+  // (at most one row — the same proven pattern billing.ts and the admin
+  // dashboard already rely on), which avoids waiting on the profile for its
+  // daycare_id. The locked screen does its own checks, so it skips all of this.
   if (user && pathname.startsWith("/app")) {
-    const isStaffPath = STAFF_PREFIXES.some(
-      (p) => pathname === p || pathname.startsWith(p + "/"),
-    );
-    const isParentPath =
-      pathname === "/app/parent" || pathname.startsWith("/app/parent/");
+    const onBilling =
+      pathname === "/app/locked" || pathname.startsWith("/app/locked/");
 
-    if (isStaffPath || isParentPath) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
+    if (!onBilling) {
+      const [{ data: profile }, { data: daycare }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("role, daycare_id, intended_role")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase.from("daycares").select("subscription_status").maybeSingle(),
+      ]);
       const role = profile?.role;
+
+      // Role-gating: keep parents in the parent area and staff in the staff area.
+      const isStaffPath = STAFF_PREFIXES.some(
+        (p) => pathname === p || pathname.startsWith(p + "/"),
+      );
+      const isParentPath =
+        pathname === "/app/parent" || pathname.startsWith("/app/parent/");
 
       if (role === "parent" && isStaffPath) {
         const url = request.nextUrl.clone();
@@ -86,32 +100,10 @@ export async function updateSession(request: NextRequest) {
         url.pathname = "/app/admin";
         return NextResponse.redirect(url);
       }
-    }
-  }
 
-  // Billing gate: staff/admin whose daycare isn't active get sent to billing.
-  // (Parents are never gated — KiddieNest is free for them.)
-  if (user && pathname.startsWith("/app")) {
-    const onBilling =
-      pathname === "/app/locked" || pathname.startsWith("/app/locked/");
-    if (!onBilling) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role, daycare_id, intended_role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      // Owner/staff with a daycare: gate on its subscription status.
-      if (
-        (profile?.role === "admin" || profile?.role === "staff") &&
-        profile?.daycare_id
-      ) {
-        const { data: daycare } = await supabase
-          .from("daycares")
-          .select("subscription_status")
-          .eq("id", profile.daycare_id)
-          .maybeSingle();
-
+      // Billing gate: staff/admin whose daycare isn't active get sent to billing.
+      // (Parents are never gated — KiddieNest is free for them.)
+      if ((role === "admin" || role === "staff") && profile?.daycare_id) {
         const ok =
           daycare?.subscription_status === "active" ||
           daycare?.subscription_status === "trialing";
@@ -125,7 +117,7 @@ export async function updateSession(request: NextRequest) {
 
       // Signed up as an owner but never paid (no daycare yet) → locked screen.
       if (
-        profile?.role === "parent" &&
+        role === "parent" &&
         !profile?.daycare_id &&
         profile?.intended_role === "owner"
       ) {

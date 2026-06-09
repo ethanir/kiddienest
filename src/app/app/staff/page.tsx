@@ -4,8 +4,10 @@ import { getStaff } from "@/app/app/staff/actions";
 import { getRooms } from "@/app/app/rooms/actions";
 
 export default async function StaffPage() {
-  const { members, invites, viewerId, viewerRole } = await getStaff();
-  const rooms = await getRooms();
+  const [{ members, invites, viewerId, viewerRole }, rooms] = await Promise.all([
+    getStaff(),
+    getRooms(),
+  ]);
   const isAdmin = viewerRole === "admin";
 
   return (

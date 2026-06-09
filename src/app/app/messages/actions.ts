@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentRole } from "@/lib/auth";
+import { getCurrentRole, getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type ChatMessage = {
@@ -20,20 +20,28 @@ type MessageRow = {
   sender_role: string;
 };
 
+// How much history a thread loads. Without a bound, every open (and every
+// realtime echo) refetches the entire conversation forever; 200 comfortably
+// covers months of a parent–teacher thread while keeping the payload flat.
+const MESSAGE_LIMIT = 200;
+
 export async function getMessages(
   childId: string,
 ): Promise<{ messages: ChatMessage[]; error?: string }> {
   const supabase = await createClient();
 
+  // Newest-first + limit selects the most RECENT page of the thread; reversing
+  // afterwards restores the oldest-first order the UI renders.
   const { data, error } = await supabase
     .from("messages")
     .select("id, body, created_at, sender_id, sender_role")
     .eq("child_id", childId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .limit(MESSAGE_LIMIT);
 
   if (error) return { messages: [], error: error.message };
 
-  const rows = (data ?? []) as MessageRow[];
+  const rows = ((data ?? []) as MessageRow[]).reverse();
   const ids = Array.from(new Set(rows.map((m) => m.sender_id)));
 
   let nameById = new Map<string, string | null>();
@@ -63,19 +71,22 @@ export async function sendMessage(
   if (!text) return { error: "Type a message first." };
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return { error: "You appear to be signed out." };
 
   const role = await getCurrentRole();
   const senderRole = role === "parent" ? "parent" : "staff";
 
-  const { data, error } = await supabase
-    .from("messages")
-    .insert({ child_id: childId, sender_id: user.id, sender_role: senderRole, body: text })
-    .select("id, body, created_at, sender_id, sender_role")
-    .single();
+  // The sender's display name doesn't depend on the insert, so fetch it in the
+  // same wave instead of paying a second round trip after every send.
+  const [{ data, error }, { data: prof }] = await Promise.all([
+    supabase
+      .from("messages")
+      .insert({ child_id: childId, sender_id: user.id, sender_role: senderRole, body: text })
+      .select("id, body, created_at, sender_id, sender_role")
+      .single(),
+    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+  ]);
 
   if (error) {
     return {
@@ -84,12 +95,6 @@ export async function sendMessage(
         : error.message,
     };
   }
-
-  const { data: prof } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .maybeSingle();
 
   return {
     message: { ...(data as MessageRow), sender_name: prof?.full_name ?? null },
