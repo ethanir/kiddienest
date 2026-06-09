@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import type { ReactNode } from "react";
-import { Check, Clock, Loader2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Check, Clock, Loader2, Plus, ShieldAlert, ShieldCheck, Trash2 } from "lucide-react";
 
 import {
   Dialog,
@@ -16,7 +16,13 @@ import { LocalTime } from "@/components/careloop/local-time";
 import { SelectField } from "@/components/careloop/select-field";
 import { useRealtime } from "@/lib/use-realtime";
 import { cn } from "@/lib/utils";
-import { createIncident, getIncidents, type IncidentRecord } from "@/app/app/incidents/actions";
+import {
+  clearAllIncidents,
+  createIncident,
+  deleteIncident,
+  getIncidents,
+  type IncidentRecord,
+} from "@/app/app/incidents/actions";
 
 type ChildLite = {
   id: string;
@@ -89,6 +95,10 @@ export function IncidentsManager({
     return { pendingCount: p, acknowledgedCount: incidents.length - p };
   }, [incidents]);
 
+  // Delete confirmation — either a single incident or "clear all".
+  const [confirm, setConfirm] = useState<{ type: "one"; incident: IncidentRecord } | { type: "all" } | null>(null);
+  const [removing, startRemoval] = useTransition();
+
   // Live: new incidents and parent acknowledgements show up on their own.
   useRealtime([{ table: "incidents" }], () => {
     getIncidents().then(setIncidents);
@@ -128,6 +138,39 @@ export function IncidentsManager({
     });
   }
 
+  function askDelete(incident: IncidentRecord) {
+    setError(null);
+    setConfirm({ type: "one", incident });
+  }
+
+  function askClearAll() {
+    setError(null);
+    setConfirm({ type: "all" });
+  }
+
+  function confirmDelete() {
+    if (!confirm) return;
+    const target = confirm;
+    startRemoval(async () => {
+      if (target.type === "one") {
+        const res = await deleteIncident(target.incident.id);
+        if (res.error) {
+          setError(res.error);
+          return;
+        }
+        setIncidents((list) => list.filter((x) => x.id !== target.incident.id));
+      } else {
+        const res = await clearAllIncidents();
+        if (res.error) {
+          setError(res.error);
+          return;
+        }
+        setIncidents([]);
+      }
+      setConfirm(null);
+    });
+  }
+
   return (
     <>
       <div className="lg:flex lg:h-[calc(100vh-3rem)] lg:flex-col lg:overflow-hidden">
@@ -151,16 +194,28 @@ export function IncidentsManager({
             ) : null}
           </div>
         )}
-        {childList.length > 0 ? (
-          <button
-            type="button"
-            onClick={openAdd}
-            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
-          >
-            <Plus className="size-4" />
-            Log incident
-          </button>
-        ) : null}
+        <div className="flex shrink-0 items-center gap-2">
+          {incidents.length > 0 ? (
+            <button
+              type="button"
+              onClick={askClearAll}
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-red-500/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+            >
+              <Trash2 className="size-4" />
+              Clear all
+            </button>
+          ) : null}
+          {childList.length > 0 ? (
+            <button
+              type="button"
+              onClick={openAdd}
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+            >
+              <Plus className="size-4" />
+              Log incident
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {childList.length === 0 ? (
@@ -214,17 +269,27 @@ export function IncidentsManager({
                     <LocalTime iso={i.occurred_at} />
                   </p>
                 </div>
-                {i.acknowledged_at ? (
-                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                    <Check className="size-3" />
-                    Acknowledged
-                  </span>
-                ) : (
-                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                    <Clock className="size-3" />
-                    Awaiting parent
-                  </span>
-                )}
+                <div className="flex shrink-0 items-center gap-2">
+                  {i.acknowledged_at ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                      <Check className="size-3" />
+                      Acknowledged
+                    </span>
+                  ) : (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                      <Clock className="size-3" />
+                      Awaiting parent
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => askDelete(i)}
+                    aria-label={`Delete ${i.child_name}'s incident`}
+                    className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
               </div>
               <p className="mt-3 text-sm text-slate-700 dark:text-slate-200">{i.description}</p>
               {i.action_taken ? (
@@ -343,6 +408,56 @@ export function IncidentsManager({
             >
               {pending ? <Loader2 className="size-4 animate-spin" /> : null}
               Log incident
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={confirm !== null}
+        onOpenChange={(o) => {
+          if (!o && !removing) setConfirm(null);
+        }}
+      >
+        <DialogContent className="rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              {confirm?.type === "all" ? "Clear all incidents?" : "Delete this incident?"}
+            </DialogTitle>
+            <DialogDescription>
+              {confirm && confirm.type === "all"
+                ? `This permanently deletes all ${incidents.length} ${
+                    incidents.length === 1 ? "incident" : "incidents"
+                  } for every child. Families will no longer see them, and this can't be undone.`
+                : confirm && confirm.type === "one"
+                  ? `This permanently deletes ${confirm.incident.child_name}'s ${confirm.incident.incident_type.toLowerCase()} incident. Their family will no longer see it, and this can't be undone.`
+                  : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {error ? (
+            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">
+              {error}
+            </p>
+          ) : null}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirm(null)}
+              disabled={removing}
+              className="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={confirmDelete}
+              disabled={removing}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-red-600 px-5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-70"
+            >
+              {removing ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+              {confirm?.type === "all" ? "Delete all" : "Delete"}
             </button>
           </DialogFooter>
         </DialogContent>

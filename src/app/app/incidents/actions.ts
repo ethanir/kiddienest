@@ -192,3 +192,45 @@ export async function acknowledgeIncident(
     acknowledgedAt: (data?.acknowledged_at as string | null) ?? new Date().toISOString(),
   };
 }
+
+export async function deleteIncident(
+  incidentId: string,
+): Promise<{ error?: string }> {
+  const role = await getCurrentRole();
+  if (role !== "staff" && role !== "admin") {
+    return { error: "Only staff can delete incidents." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("delete_incident", { p_incident: incidentId });
+  if (error) {
+    return {
+      error: error.message.toLowerCase().includes("only staff")
+        ? "Only staff can delete incidents."
+        : error.message,
+    };
+  }
+
+  revalidatePath("/app/parent");
+  return {};
+}
+
+export async function clearAllIncidents(): Promise<{ deleted?: number; error?: string }> {
+  const role = await getCurrentRole();
+  if (role !== "staff" && role !== "admin") {
+    return { error: "Only staff can clear incidents." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("clear_all_incidents");
+  if (error) {
+    return {
+      error: error.message.toLowerCase().includes("only staff")
+        ? "Only staff can clear incidents."
+        : error.message,
+    };
+  }
+
+  revalidatePath("/app/parent");
+  return { deleted: typeof data === "number" ? data : undefined };
+}
