@@ -27,6 +27,7 @@ import {
   setAttendance,
   type AttendanceStatus,
 } from "@/app/app/check-in/actions";
+import { cardBase } from "@/lib/ui";
 
 type Child = {
   id: string;
@@ -40,9 +41,6 @@ type Child = {
   checked_in_at: string | null;
   checked_out_at: string | null;
 };
-
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
 function withStatus(c: Child, next: AttendanceStatus): Child {
   const now = new Date().toISOString();
@@ -109,10 +107,15 @@ export function CheckInBoard({
   }, [visible]);
 
   // Merge a fresh roster but keep the local copy of any child mid-write, so a
-  // live update can't revert a status the user just tapped.
+  // live update can't revert a status the user just tapped. The Map keeps the
+  // merge O(n) — a find() inside map() would re-scan the whole roster for
+  // every child — and when nothing is pending the roster passes straight
+  // through.
   function mergeRoster(prev: Child[], roster: Child[]): Child[] {
+    if (pendingRef.current.size === 0) return roster;
+    const prevById = new Map(prev.map((c) => [c.id, c]));
     return roster.map((r) =>
-      pendingRef.current.has(r.id) ? prev.find((c) => c.id === r.id) ?? r : r,
+      pendingRef.current.has(r.id) ? prevById.get(r.id) ?? r : r,
     );
   }
 
@@ -140,17 +143,32 @@ export function CheckInBoard({
     const run: Promise<void> = prev
       .then(async () => {
         const res = await setAttendance(id, next);
-        if (res) setError(res.error);
+        if (res.error) {
+          setError(res.error);
+          return null;
+        }
+        return res.child ?? null;
       })
-      .catch(() => {})
-      .then(() => {
+      .catch(() => null)
+      .then((confirmed) => {
         // Only the last queued write for this child reconciles + releases.
         if (chainRef.current.get(id) === run) {
           chainRef.current.delete(id);
           pendingRef.current.delete(id);
-          getCheckinRoster().then((roster) =>
-            setChildren((cs) => mergeRoster(cs, roster as Child[])),
-          );
+          if (confirmed) {
+            // Patch just this child with the server-confirmed row — a tap no
+            // longer re-fetches the entire roster. Other people's changes keep
+            // arriving through the (debounced) realtime re-fetch, which the
+            // pending guard above already protects against.
+            setChildren((cs) =>
+              cs.map((c) => (c.id === id ? (confirmed as Child) : c)),
+            );
+          } else {
+            // Write failed or came back empty — reconcile with the truth.
+            getCheckinRoster().then((roster) =>
+              setChildren((cs) => mergeRoster(cs, roster as Child[])),
+            );
+          }
         }
       });
     chainRef.current.set(id, run);
@@ -164,6 +182,7 @@ export function CheckInBoard({
     // so a realtime echo of the bulk update can't briefly repaint the old
     // checked-in state before the reset is confirmed — mergeRoster keeps the
     // local (reset) copy for any pending id.
+    const inflight = Array.from(chainRef.current.values());
     chainRef.current.clear();
     const snapshot = children;
     const ids = children.map((c) => c.id);
@@ -177,6 +196,14 @@ export function CheckInBoard({
         checked_out_at: null,
       })),
     );
+
+    // Let any write already traveling to the server land first, so the bulk
+    // reset is ordered strictly after it in the database — otherwise a
+    // straggler tap could commit AFTER the reset and quietly leave that child
+    // checked in server-side while the board shows everyone reset. (Their
+    // cleared chains skip their own reconcile; the screen already shows the
+    // optimistic reset, so this wait isn't visible.)
+    await Promise.allSettled(inflight);
 
     const res = await resetAllAttendance();
 

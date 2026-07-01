@@ -4,9 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/careloop/app-shell";
 import { forms } from "@/lib/demo-data";
-
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
+import { cardBase } from "@/lib/ui";
 
 export default function FormsPage() {
   return (

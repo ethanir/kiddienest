@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { rlsError } from "@/lib/supabase/errors";
 
 export type AttendanceStatus =
   | "not_arrived"
@@ -32,10 +33,13 @@ export async function getCheckinRoster(): Promise<CheckinChild[]> {
   return (data ?? []) as CheckinChild[];
 }
 
+// Writes the new status and returns the server-confirmed row (same columns as
+// the roster), so the board can patch just this child instead of re-fetching
+// the whole roster after every tap.
 export async function setAttendance(
   childId: string,
   status: AttendanceStatus,
-): Promise<{ error: string } | null> {
+): Promise<{ child?: CheckinChild; error?: string }> {
   const supabase = await createClient();
 
   const patch: Record<string, unknown> = { attendance_status: status };
@@ -53,19 +57,18 @@ export async function setAttendance(
     .from("children")
     .update(patch)
     .eq("id", childId)
-    .select("id");
+    .select(
+      "id, full_name, room, room_id, emoji, avatar_bg, allergies, attendance_status, checked_in_at, checked_out_at",
+    )
+    .maybeSingle();
 
   if (error) {
-    return {
-      error: error.message.toLowerCase().includes("row-level security")
-        ? "Only staff can change check-in status."
-        : error.message,
-    };
+    return { error: rlsError(error, "Only staff can change check-in status.") };
   }
-  if (!data || data.length === 0) {
+  if (!data) {
     return { error: "Only staff can change check-in status." };
   }
-  return null;
+  return { child: data as CheckinChild };
 }
 
 export async function resetAllAttendance(): Promise<{ error: string } | null> {
@@ -82,11 +85,7 @@ export async function resetAllAttendance(): Promise<{ error: string } | null> {
     .select("id");
 
   if (error) {
-    return {
-      error: error.message.toLowerCase().includes("row-level security")
-        ? "Only staff can reset check-in."
-        : error.message,
-    };
+    return { error: rlsError(error, "Only staff can reset check-in.") };
   }
   if (!data || data.length === 0) {
     return { error: "Only staff can reset check-in." };

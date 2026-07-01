@@ -21,17 +21,7 @@ import {
 } from "lucide-react";
 
 import { authenticate, type AuthState } from "./actions";
-
-const emblemStyle = {
-  maskImage: "url(/brand-emblem.png)",
-  WebkitMaskImage: "url(/brand-emblem.png)",
-  maskSize: "contain",
-  WebkitMaskSize: "contain",
-  maskRepeat: "no-repeat",
-  WebkitMaskRepeat: "no-repeat",
-  maskPosition: "center",
-  WebkitMaskPosition: "center",
-} as const;
+import { emblemStyle } from "@/lib/ui";
 
 const dotGrid = {
   backgroundImage: "radial-gradient(rgb(100 116 139) 1px, transparent 1px)",

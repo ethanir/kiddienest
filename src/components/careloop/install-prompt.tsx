@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Share, X } from "lucide-react";
+import { emblemStyle } from "@/lib/ui";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -29,17 +30,6 @@ function isStandalone(): boolean {
     (window.navigator as unknown as { standalone?: boolean }).standalone === true
   );
 }
-
-const emblemStyle = {
-  maskImage: "url(/brand-emblem.png)",
-  WebkitMaskImage: "url(/brand-emblem.png)",
-  maskSize: "contain",
-  WebkitMaskSize: "contain",
-  maskRepeat: "no-repeat",
-  WebkitMaskRepeat: "no-repeat",
-  maskPosition: "center",
-  WebkitMaskPosition: "center",
-} as const;
 
 export function InstallPrompt() {
   const [mode, setMode] = useState<"none" | "android" | "ios">("none");

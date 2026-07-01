@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { rlsError } from "@/lib/supabase/errors";
 
 export type RoomRecord = {
   id: string;
@@ -13,14 +14,6 @@ export type RoomRecord = {
 };
 
 const SELECT = "id, name, color, capacity, max_per_staff, sort_order";
-
-function staffError(error: { message: string; code?: string }): string {
-  const msg = error.message.toLowerCase();
-  if (msg.includes("row-level security") || error.code === "PGRST116") {
-    return "Only staff can manage rooms.";
-  }
-  return error.message;
-}
 
 function revalidateRoomScreens() {
   revalidatePath("/app/rooms");
@@ -90,11 +83,7 @@ export async function createRoom(
     .single();
 
   if (error) {
-    const msg = error.message.toLowerCase();
-    if (msg.includes("row-level security")) {
-      return { error: "Only staff can create rooms." };
-    }
-    return { error: error.message };
+    return { error: rlsError(error, "Only staff can create rooms.") };
   }
 
   revalidateRoomScreens();
@@ -116,10 +105,20 @@ export async function updateRoom(
     .select(SELECT)
     .single();
 
-  if (error) return { error: staffError(error) };
+  if (error) return { error: rlsError(error, "Only staff can manage rooms.") };
 
-  // Keep the denormalized children.room display name in sync.
-  await supabase.from("children").update({ room: trimmed }).eq("room_id", id);
+  // Keep the denormalized children.room display name in sync. If this fails,
+  // say so — silently ignoring it would leave stale room labels on children.
+  const { error: syncErr } = await supabase
+    .from("children")
+    .update({ room: trimmed })
+    .eq("room_id", id);
+  if (syncErr) {
+    return {
+      error:
+        "The room was saved, but updating the children's room labels failed. Refresh and try again.",
+    };
+  }
 
   revalidateRoomScreens();
   return { room: data as RoomRecord };
@@ -129,11 +128,17 @@ export async function deleteRoom(id: string): Promise<{ ok?: true; error?: strin
   const supabase = await createClient();
 
   // Unassign children first (also clears their display name). The FK is ON
-  // DELETE SET NULL, but we clear the text name explicitly too.
-  await supabase.from("children").update({ room: null, room_id: null }).eq("room_id", id);
+  // DELETE SET NULL, but we clear the text name explicitly too. If this step
+  // fails, abort BEFORE deleting the room so we never leave children pointing
+  // at stale room names.
+  const { error: unassignErr } = await supabase
+    .from("children")
+    .update({ room: null, room_id: null })
+    .eq("room_id", id);
+  if (unassignErr) return { error: rlsError(unassignErr, "Only staff can manage rooms.") };
 
   const { error } = await supabase.from("rooms").delete().eq("id", id);
-  if (error) return { error: staffError(error) };
+  if (error) return { error: rlsError(error, "Only staff can manage rooms.") };
 
   revalidateRoomScreens();
   return { ok: true };
@@ -153,7 +158,13 @@ export async function assignChildRoom(
       .select("name")
       .eq("id", roomId)
       .maybeSingle();
-    roomName = room?.name ?? null;
+    // Must resolve under RLS — otherwise it isn't a room in this daycare (or
+    // it was just deleted), and we refuse to write a cross-tenant or dangling
+    // room_id onto the child.
+    if (!room) {
+      return { error: "That room could not be found. Refresh and try again." };
+    }
+    roomName = room.name;
   }
 
   const { error } = await supabase
@@ -161,7 +172,7 @@ export async function assignChildRoom(
     .update({ room_id: roomId, room: roomName })
     .eq("id", childId);
 
-  if (error) return { error: staffError(error) };
+  if (error) return { error: rlsError(error, "Only staff can manage rooms.") };
 
   revalidateRoomScreens();
   return { ok: true };

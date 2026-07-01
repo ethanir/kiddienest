@@ -3,9 +3,7 @@ import { Baby } from "lucide-react";
 import { MessageThread } from "@/components/careloop/message-thread";
 
 import { loadParentChild } from "../shared";
-
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
+import { cardBase } from "@/lib/ui";
 
 export default async function ParentMessagesPage() {
   const child = await loadParentChild();

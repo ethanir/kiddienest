@@ -26,6 +26,8 @@ import {
 } from "@/components/careloop/room-filter";
 import { cn } from "@/lib/utils";
 import { createUpdate, type PostState } from "@/app/app/daily-report/actions";
+import { UPDATE_TYPES, type UpdateTypeLabel } from "@/lib/update-types";
+import { cardBase } from "@/lib/ui";
 
 type Child = {
   id: string;
@@ -44,17 +46,20 @@ type ReportType = {
   color: string;
 };
 
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
+// Per-surface presentation for each canonical update type. The labels and
+// titles themselves live in @/lib/update-types — the same source the server
+// action validates against — so the buttons offered here and the types the
+// database accepts can never drift apart.
+const typeMeta: Record<UpdateTypeLabel, { defaultNote: string; icon: LucideIcon; color: string }> = {
+  Meal: { defaultNote: "Ate most of lunch and drank water.", icon: Utensils, color: "bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400" },
+  Nap: { defaultNote: "Started nap time and settled down calmly.", icon: Moon, color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400" },
+  Photo: { defaultNote: "A new classroom photo was shared with the family.", icon: Camera, color: "bg-pink-50 text-pink-700 dark:bg-pink-500/10 dark:text-pink-400" },
+  Note: { defaultNote: "Had a great day and participated well in activities.", icon: ClipboardList, color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" },
+  Activity: { defaultNote: "Practiced sharing, cleanup, colors, and group play.", icon: Sparkles, color: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400" },
+  Incident: { defaultNote: "Minor incident recorded. Parent signature may be needed.", icon: AlertTriangle, color: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" },
+};
 
-const reportTypes: ReportType[] = [
-  { label: "Meal", title: "Meal update", defaultNote: "Ate most of lunch and drank water.", icon: Utensils, color: "bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400" },
-  { label: "Nap", title: "Nap update", defaultNote: "Started nap time and settled down calmly.", icon: Moon, color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400" },
-  { label: "Photo", title: "Photo shared", defaultNote: "A new classroom photo was shared with the family.", icon: Camera, color: "bg-pink-50 text-pink-700 dark:bg-pink-500/10 dark:text-pink-400" },
-  { label: "Note", title: "Teacher note", defaultNote: "Had a great day and participated well in activities.", icon: ClipboardList, color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" },
-  { label: "Activity", title: "Activity update", defaultNote: "Practiced sharing, cleanup, colors, and group play.", icon: Sparkles, color: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400" },
-  { label: "Incident", title: "Incident note", defaultNote: "Minor incident recorded. Parent signature may be needed.", icon: AlertTriangle, color: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" },
-];
+const reportTypes: ReportType[] = UPDATE_TYPES.map((t) => ({ ...t, ...typeMeta[t.label] }));
 
 export function DailyReportBuilder({
   childProfiles,
@@ -265,7 +270,6 @@ export function DailyReportBuilder({
         <form action={formAction}>
           <input type="hidden" name="childId" value={selectedChild?.id ?? ""} />
           <input type="hidden" name="type" value={selectedType.label} />
-          <input type="hidden" name="title" value={selectedType.title} />
 
           {isPhoto ? (
             <div className="animate-in fade-in-0 duration-300">

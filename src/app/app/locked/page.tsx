@@ -20,19 +20,9 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/login/actions";
 import { startCheckout } from "@/lib/checkout";
+import { emblemStyle } from "@/lib/ui";
 
 const ACTIVE = new Set(["active", "trialing"]);
-
-const emblemStyle = {
-  maskImage: "url(/brand-emblem.png)",
-  WebkitMaskImage: "url(/brand-emblem.png)",
-  maskSize: "contain",
-  WebkitMaskSize: "contain",
-  maskRepeat: "no-repeat",
-  WebkitMaskRepeat: "no-repeat",
-  maskPosition: "center",
-  WebkitMaskPosition: "center",
-} as const;
 
 const INCLUDED = [
   "Unlimited children & staff — no per-child fees",

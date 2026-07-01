@@ -11,15 +11,8 @@ import {
   getIncidentsForChild,
   type IncidentRecord,
 } from "@/app/app/incidents/actions";
-
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
-
-const severityCls: Record<string, string> = {
-  Minor: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
-  Moderate: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
-  Serious: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
-};
+import { cardBase } from "@/lib/ui";
+import { severityCls } from "@/lib/incident-meta";
 
 export function ParentIncidents({
   childId,

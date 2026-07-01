@@ -11,17 +11,7 @@ import { InstallPrompt } from "@/components/careloop/install-prompt";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/app/login/actions";
 import { cn } from "@/lib/utils";
-
-const emblemStyle = {
-  maskImage: "url(/brand-emblem.png)",
-  WebkitMaskImage: "url(/brand-emblem.png)",
-  maskSize: "contain",
-  WebkitMaskSize: "contain",
-  maskRepeat: "no-repeat",
-  WebkitMaskRepeat: "no-repeat",
-  maskPosition: "center",
-  WebkitMaskPosition: "center",
-} as const;
+import { emblemStyle } from "@/lib/ui";
 
 const TABS = [
   { href: "/app/parent", label: "Today", icon: Home },

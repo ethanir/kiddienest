@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getCurrentRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { rlsError } from "@/lib/supabase/errors";
 
 export type ChildRecord = {
   id: string;
@@ -43,14 +44,6 @@ type ChildInput = {
 const SELECT =
   "id, full_name, room, room_id, birthdate, allergies, emoji, avatar_bg, attendance_status";
 
-function staffError(error: { message: string; code?: string }): string {
-  const msg = error.message.toLowerCase();
-  if (msg.includes("row-level security") || error.code === "PGRST116") {
-    return "Only staff can manage children.";
-  }
-  return error.message;
-}
-
 async function roomName(
   supabase: Awaited<ReturnType<typeof createClient>>,
   roomId: string | null,
@@ -68,6 +61,12 @@ export async function createChild(
 
   const supabase = await createClient();
   const rName = await roomName(supabase, input.room_id);
+  // A provided room id must resolve under RLS. If it doesn't, it isn't a room
+  // in this daycare (or it was just deleted) — reject instead of writing a
+  // cross-tenant or dangling room_id onto the child.
+  if (input.room_id && rName === null) {
+    return { error: "That room could not be found. Refresh and try again." };
+  }
   const { data, error } = await supabase
     .from("children")
     .insert({
@@ -82,7 +81,7 @@ export async function createChild(
     .select(SELECT)
     .single();
 
-  if (error) return { error: staffError(error) };
+  if (error) return { error: rlsError(error, "Only staff can manage children.") };
 
   revalidatePath("/app/admin");
   revalidatePath("/app/check-in");
@@ -98,6 +97,10 @@ export async function updateChild(
 
   const supabase = await createClient();
   const rName = await roomName(supabase, input.room_id);
+  // Same guard as createChild: a provided room id must resolve under RLS.
+  if (input.room_id && rName === null) {
+    return { error: "That room could not be found. Refresh and try again." };
+  }
   const { data, error } = await supabase
     .from("children")
     .update({
@@ -113,7 +116,7 @@ export async function updateChild(
     .select(SELECT)
     .single();
 
-  if (error) return { error: staffError(error) };
+  if (error) return { error: rlsError(error, "Only staff can manage children.") };
 
   revalidatePath("/app/admin");
   revalidatePath("/app/check-in");
@@ -288,7 +291,7 @@ export async function importChildren(
   const { data: roomRows, error: roomErr } = await supabase
     .from("rooms")
     .select("id, name, sort_order");
-  if (roomErr) return { error: staffError(roomErr) };
+  if (roomErr) return { error: rlsError(roomErr, "Only staff can manage children.") };
 
   const rooms = (roomRows ?? []) as { id: string; name: string; sort_order: number }[];
   const idByName = new Map<string, string>();
@@ -319,7 +322,7 @@ export async function importChildren(
         .from("rooms")
         .insert(toInsert)
         .select("id, name");
-      if (createErr) return { error: staffError(createErr) };
+      if (createErr) return { error: rlsError(createErr, "Only staff can manage children.") };
       for (const r of (created ?? []) as { id: string; name: string }[]) {
         idByName.set(r.name.trim().toLowerCase(), r.id);
         nameById.set(r.id, r.name);
@@ -361,8 +364,8 @@ export async function importChildren(
         roomsCreated,
         error:
           done > 0
-            ? `${staffError(error)} (Imported the first ${done} before this error.)`
-            : staffError(error),
+            ? `${rlsError(error, "Only staff can manage children.")} (Imported the first ${done} before this error.)`
+            : rlsError(error, "Only staff can manage children."),
       };
     }
     createdChildren.push(...((data ?? []) as ChildRecord[]));

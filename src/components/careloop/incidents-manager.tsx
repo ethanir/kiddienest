@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import type { ReactNode } from "react";
 import { Check, Clock, Loader2, Plus, ShieldAlert, ShieldCheck, Trash2 } from "lucide-react";
 
 import {
@@ -23,6 +22,9 @@ import {
   getIncidents,
   type IncidentRecord,
 } from "@/app/app/incidents/actions";
+import { cardBase, inputCls } from "@/lib/ui";
+import { INCIDENT_SEVERITIES, INCIDENT_TYPES, severityCls } from "@/lib/incident-meta";
+import { Field } from "@/components/careloop/field";
 
 type ChildLite = {
   id: string;
@@ -32,23 +34,8 @@ type ChildLite = {
   room: string | null;
 };
 
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
-
-const inputCls =
-  "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/20";
-
 const textareaCls =
   "w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/20";
-
-const TYPES = ["Injury", "Illness", "Behavior", "Other"];
-const SEVERITIES = ["Minor", "Moderate", "Serious"];
-
-const severityCls: Record<string, string> = {
-  Minor: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
-  Moderate: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
-  Serious: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
-};
 
 function nowLocal() {
   const d = new Date();
@@ -341,7 +328,7 @@ export function IncidentsManager({
                   ariaLabel="Incident type"
                   value={form.incidentType}
                   onValueChange={(v) => setForm((f) => ({ ...f, incidentType: v }))}
-                  options={TYPES.map((t) => ({ value: t, label: t }))}
+                  options={INCIDENT_TYPES.map((t) => ({ value: t, label: t }))}
                 />
               </Field>
               <Field label="Severity">
@@ -349,7 +336,7 @@ export function IncidentsManager({
                   ariaLabel="Severity"
                   value={form.severity}
                   onValueChange={(v) => setForm((f) => ({ ...f, severity: v }))}
-                  options={SEVERITIES.map((s) => ({ value: s, label: s }))}
+                  options={INCIDENT_SEVERITIES.map((s) => ({ value: s, label: s }))}
                 />
               </Field>
             </div>
@@ -466,11 +453,3 @@ export function IncidentsManager({
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium">{label}</span>
-      {children}
-    </label>
-  );
-}

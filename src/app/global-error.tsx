@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import "./globals.css";
+import { emblemStyle } from "@/lib/ui";
 
 // global-error replaces the root layout when an error is thrown there, so it
 // must render its own <html>/<body> and re-apply the no-flash theme script.
@@ -13,17 +14,6 @@ try {
   if (dark) document.documentElement.classList.add('dark');
 } catch (e) {}
 `;
-
-const emblemStyle = {
-  maskImage: "url(/brand-emblem.png)",
-  WebkitMaskImage: "url(/brand-emblem.png)",
-  maskSize: "contain",
-  WebkitMaskSize: "contain",
-  maskRepeat: "no-repeat",
-  WebkitMaskRepeat: "no-repeat",
-  maskPosition: "center",
-  WebkitMaskPosition: "center",
-} as const;
 
 export default function GlobalError({
   error,

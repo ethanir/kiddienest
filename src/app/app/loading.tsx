@@ -1,5 +1,4 @@
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
+import { cardBase } from "@/lib/ui";
 
 // Loading fallback for /app routes. Because it renders inside <AppChrome> (which
 // lives in the layout and stays mounted), the sidebar and mobile nav remain

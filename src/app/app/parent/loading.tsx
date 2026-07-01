@@ -1,5 +1,4 @@
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
+import { cardBase } from "@/lib/ui";
 
 // Rendered instantly (inside the persistent parent shell) while the next tab's
 // data streams in — so tapping a tab feels immediate instead of frozen.

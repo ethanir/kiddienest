@@ -11,6 +11,7 @@ import {
   type RoomLite,
 } from "@/components/careloop/room-filter";
 import { cn } from "@/lib/utils";
+import { cardBase } from "@/lib/ui";
 
 type ChildLite = {
   id: string;
@@ -20,9 +21,6 @@ type ChildLite = {
   emoji: string | null;
   avatar_bg: string | null;
 };
-
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
 export function StaffMessages({
   childList,

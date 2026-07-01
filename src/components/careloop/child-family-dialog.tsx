@@ -19,9 +19,7 @@ import {
   type ChildInvite,
   type ChildParent,
 } from "@/app/app/children/actions";
-
-const inputCls =
-  "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/20";
+import { inputCls } from "@/lib/ui";
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

@@ -15,12 +15,7 @@ import {
   type StaffInvite,
   type StaffMember,
 } from "@/app/app/staff/actions";
-
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
-
-const inputCls =
-  "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/20";
+import { cardBase, inputCls } from "@/lib/ui";
 
 const roleBadge: Record<string, string> = {
   admin: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400",

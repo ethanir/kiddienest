@@ -2,17 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-
-const emblemStyle = {
-  maskImage: "url(/brand-emblem.png)",
-  WebkitMaskImage: "url(/brand-emblem.png)",
-  maskSize: "contain",
-  WebkitMaskSize: "contain",
-  maskRepeat: "no-repeat",
-  WebkitMaskRepeat: "no-repeat",
-  maskPosition: "center",
-  WebkitMaskPosition: "center",
-} as const;
+import { emblemStyle } from "@/lib/ui";
 
 export default function ErrorPage({
   error,

@@ -25,11 +25,10 @@ import {
   updateRoom,
   type RoomRecord,
 } from "@/app/app/rooms/actions";
+import { cardBase } from "@/lib/ui";
 
 type RoomWithCount = RoomRecord & { child_count: number };
 
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 const inputCls =
   "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-base text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
 

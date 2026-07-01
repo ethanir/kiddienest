@@ -27,21 +27,16 @@ import { CountUp } from "@/components/careloop/count-up";
 import { DashboardGreeting } from "@/components/careloop/dashboard-greeting";
 import { RealtimeRefresh } from "@/components/careloop/realtime-refresh";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentRole } from "@/lib/auth";
+import { getCurrentRole, getCurrentUser } from "@/lib/auth";
 import { getRooms } from "@/app/app/rooms/actions";
 import { cn } from "@/lib/utils";
 import { openBillingPortal } from "@/lib/billing";
-
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
+import { cardBase } from "@/lib/ui";
 
 type ChildRow = {
   id: string;
   full_name: string;
-  room: string | null;
   room_id: string | null;
-  emoji: string | null;
-  avatar_bg: string | null;
   allergies: string | null;
   attendance_status: string;
 };
@@ -56,46 +51,82 @@ type UpdateRow = {
 
 export default async function AdminPage() {
   const supabase = await createClient();
-  const viewerRole = await getCurrentRole();
-  const isAdmin = viewerRole === "admin";
 
-  const [{ data: childData }, { data: updateData }, rooms] = await Promise.all([
+  // Everything the dashboard needs, fetched in ONE parallel wave. The children
+  // select is trimmed to exactly the columns the stats/lookups use (no emoji,
+  // avatar or room name — nothing here renders them) and is unordered, since
+  // the roster itself is never listed on this screen. The daycare row is read
+  // under RLS so it's only ever the caller's own; getCurrentRole/getCurrentUser
+  // share a single cached auth call.
+  const [
+    viewerRole,
+    user,
+    { data: childData },
+    { data: updateData },
+    rooms,
+    { data: staffRows },
+    { data: daycare },
+  ] = await Promise.all([
+    getCurrentRole(),
+    getCurrentUser(),
     supabase
       .from("children")
-      .select("id, full_name, room, room_id, emoji, avatar_bg, allergies, attendance_status")
-      .order("full_name"),
+      .select("id, full_name, room_id, allergies, attendance_status"),
     supabase
       .from("daily_updates")
       .select("id, type, title, created_at, child_id")
       .order("created_at", { ascending: false })
       .limit(6),
     getRooms(),
+    supabase.from("profiles").select("room_id").in("role", ["staff", "admin"]),
+    supabase
+      .from("daycares")
+      .select("owner_id, subscription_status, stripe_customer_id")
+      .maybeSingle(),
   ]);
+  const isAdmin = viewerRole === "admin";
 
   const children = (childData ?? []) as ChildRow[];
   const updates = (updateData ?? []) as UpdateRow[];
 
   const total = children.length;
-  const checkedIn = children.filter((c) => c.attendance_status === "checked_in").length;
-  const notArrived = children.filter((c) => c.attendance_status === "not_arrived").length;
-  const absent = children.filter((c) => c.attendance_status === "absent").length;
+
+  // One pass over the roster computes every aggregate the dashboard shows —
+  // attendance counts, per-room enrolled/present, unassigned, and allergies —
+  // instead of re-filtering the same array once per stat and once per room.
+  let checkedIn = 0;
+  let notArrived = 0;
+  let absent = 0;
+  let unassignedCount = 0;
+  let allergyCount = 0;
+  const roomTallies = new Map<string, { enrolled: number; present: number }>();
+  for (const c of children) {
+    if (c.attendance_status === "checked_in") checkedIn++;
+    else if (c.attendance_status === "not_arrived") notArrived++;
+    else if (c.attendance_status === "absent") absent++;
+    if (c.room_id) {
+      const tally = roomTallies.get(c.room_id) ?? { enrolled: 0, present: 0 };
+      tally.enrolled++;
+      if (c.attendance_status === "checked_in") tally.present++;
+      roomTallies.set(c.room_id, tally);
+    } else {
+      unassignedCount++;
+    }
+    if (c.allergies && c.allergies.trim().toLowerCase() !== "none") allergyCount++;
+  }
 
   const childById = new Map(children.map((c) => [c.id, c]));
   const recentUpdates = updates.map((u) => ({ ...u, child: childById.get(u.child_id) ?? null }));
 
   // Per-room overview (present vs enrolled, plus staffing ratio) for the dashboard.
-  const { data: staffRows } = await supabase
-    .from("profiles")
-    .select("room_id")
-    .in("role", ["staff", "admin"]);
   const staffCounts: Record<string, number> = {};
   for (const s of (staffRows ?? []) as { room_id: string | null }[]) {
     if (s.room_id) staffCounts[s.room_id] = (staffCounts[s.room_id] ?? 0) + 1;
   }
 
   const roomOverview = rooms.map((r) => {
-    const inRoom = children.filter((c) => c.room_id === r.id);
-    const present = inRoom.filter((c) => c.attendance_status === "checked_in").length;
+    const tally = roomTallies.get(r.id) ?? { enrolled: 0, present: 0 };
+    const present = tally.present;
     const staff = staffCounts[r.id] ?? 0;
     const maxPer = r.max_per_staff;
     const neededStaff = maxPer && maxPer > 0 ? Math.ceil(present / maxPer) : null;
@@ -103,7 +134,7 @@ export default async function AdminPage() {
     return {
       id: r.id,
       name: r.name,
-      enrolled: inRoom.length,
+      enrolled: tally.enrolled,
       present,
       capacity: r.capacity,
       staff,
@@ -112,22 +143,10 @@ export default async function AdminPage() {
       understaffed,
     };
   });
-  const unassignedCount = children.filter((c) => !c.room_id).length;
   const understaffedCount = roomOverview.filter((r) => r.understaffed).length;
 
-  const allergyKids = children.filter(
-    (c) => c.allergies && c.allergies.trim().toLowerCase() !== "none",
-  );
-
-  // Billing is shown only to the owner (the person who pays). The daycare row is
-  // read under RLS, so it's only ever the caller's own.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: daycare } = await supabase
-    .from("daycares")
-    .select("owner_id, subscription_status, stripe_customer_id")
-    .maybeSingle();
+  // Billing is shown only to the owner (the person who pays); the daycare row
+  // was fetched above under RLS, so it's only ever the caller's own.
   const isOwner = Boolean(user && daycare && daycare.owner_id === user.id);
   const subscriptionStatus = (daycare?.subscription_status as string | null) ?? null;
   const hasBillingCustomer = Boolean(daycare?.stripe_customer_id);
@@ -259,7 +278,7 @@ export default async function AdminPage() {
               </div>
               <div className="mt-2 grid gap-0.5">
                 <AttnRow href="/app/rooms" label="Understaffed rooms" count={understaffedCount} />
-                <AttnRow href="/app/children" label="Children with allergies" count={allergyKids.length} />
+                <AttnRow href="/app/children" label="Children with allergies" count={allergyCount} />
                 <AttnRow href="/app/children" label="Unassigned children" count={unassignedCount} />
               </div>
             </section>

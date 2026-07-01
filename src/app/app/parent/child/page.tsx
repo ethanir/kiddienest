@@ -4,9 +4,7 @@ import { ParentIncidents } from "@/components/careloop/parent-incidents";
 import { getIncidentsForChild } from "@/app/app/incidents/actions";
 
 import { loadParentChild } from "../shared";
-
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
+import { cardBase } from "@/lib/ui";
 
 export default async function ParentChildPage() {
   const child = await loadParentChild();

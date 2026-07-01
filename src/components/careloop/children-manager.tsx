@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import type { ReactNode } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -25,30 +24,17 @@ import {
 } from "@/components/ui/dialog";
 import { ChildFamilyDialog } from "@/components/careloop/child-family-dialog";
 import { ChildrenImportDialog } from "@/components/careloop/children-import-dialog";
+import {
+  RoomFilterBar,
+  matchesRoomAndQuery,
+  useRoomFilter,
+} from "@/components/careloop/room-filter";
 import { cn } from "@/lib/utils";
 import { createChild, updateChild, type ChildRecord } from "@/app/app/children/actions";
 import type { RoomRecord } from "@/app/app/rooms/actions";
-
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
-
-const inputCls =
-  "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/20";
-
-const AVATARS = [
-  { emoji: "😊", bg: "#fce7f3" },
-  { emoji: "🐻", bg: "#fef3c7" },
-  { emoji: "🦊", bg: "#ffedd5" },
-  { emoji: "🐰", bg: "#ede9fe" },
-  { emoji: "🐥", bg: "#fef9c3" },
-  { emoji: "🐸", bg: "#dcfce7" },
-  { emoji: "🐙", bg: "#dbeafe" },
-  { emoji: "🦄", bg: "#fae8ff" },
-  { emoji: "🐢", bg: "#ccfbf1" },
-  { emoji: "⭐", bg: "#ffe4e6" },
-  { emoji: "🐝", bg: "#fef08a" },
-  { emoji: "🦋", bg: "#e0f2fe" },
-];
+import { cardBase, inputCls } from "@/lib/ui";
+import { AVATARS } from "@/lib/avatars";
+import { Field } from "@/components/careloop/field";
 
 type FormState = {
   name: string;
@@ -76,6 +62,24 @@ export function ChildrenManager({
   rooms: RoomRecord[];
 }) {
   const [children, setChildren] = useState<ChildRecord[]>(initialChildren);
+  const { roomId, setRoomId, query, setQuery } = useRoomFilter();
+
+  // Per-room enrolled counts for the filter chips.
+  const roomCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const c of children) if (c.room_id) m[c.room_id] = (m[c.room_id] ?? 0) + 1;
+    return m;
+  }, [children]);
+
+  // The children currently shown (room + name filter). The list is already
+  // kept in name order, and filtering preserves it.
+  const visible = useMemo(
+    () =>
+      children.filter((c) =>
+        matchesRoomAndQuery(c, roomId, query, (x) => x.room_id, (x) => x.full_name),
+      ),
+    [children, roomId, query],
+  );
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -152,7 +156,9 @@ export function ChildrenManager({
         <p className="text-sm text-slate-500 dark:text-slate-400">
           {children.length === 0
             ? "No children yet"
-            : `${children.length} ${children.length === 1 ? "child" : "children"}`}
+            : visible.length !== children.length
+              ? `${visible.length} of ${children.length} children`
+              : `${children.length} ${children.length === 1 ? "child" : "children"}`}
         </p>
         <div className="flex shrink-0 items-center gap-2">
           <button
@@ -173,6 +179,21 @@ export function ChildrenManager({
           </button>
         </div>
       </div>
+
+      {children.length > 0 ? (
+        <div className="mb-5 lg:shrink-0">
+          <RoomFilterBar
+            rooms={rooms}
+            counts={roomCounts}
+            totalCount={children.length}
+            roomId={roomId}
+            onRoomChange={setRoomId}
+            query={query}
+            onQueryChange={setQuery}
+            searchPlaceholder="Search children…"
+          />
+        </div>
+      ) : null}
 
       {children.length === 0 ? (
         <div className={cn(cardBase, "px-6 py-12 text-center")}>
@@ -203,9 +224,16 @@ export function ChildrenManager({
             </button>
           </div>
         </div>
+      ) : visible.length === 0 ? (
+        <div className={cn(cardBase, "px-6 py-10 text-center lg:shrink-0")}>
+          <h2 className="text-base font-semibold">No children match</h2>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+            Try a different name, or switch rooms.
+          </p>
+        </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
-          {children.map((child) => {
+          {visible.map((child) => {
             const hasAllergy =
               !!child.allergies && child.allergies.trim().toLowerCase() !== "none";
             return (
@@ -399,15 +427,6 @@ export function ChildrenManager({
         }
       />
     </>
-  );
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium">{label}</span>
-      {children}
-    </label>
   );
 }
 

@@ -25,6 +25,7 @@ import { ThemeToggle } from "@/components/careloop/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/app/login/actions";
 import { cn } from "@/lib/utils";
+import { emblemStyle } from "@/lib/ui";
 
 type NavItem = {
   href: string;
@@ -69,17 +70,6 @@ const STAFF_PREFIXES = [
   "/app/staff",
   "/app/forms",
 ];
-
-const emblemStyle = {
-  maskImage: "url(/brand-emblem.png)",
-  WebkitMaskImage: "url(/brand-emblem.png)",
-  maskSize: "contain",
-  WebkitMaskSize: "contain",
-  maskRepeat: "no-repeat",
-  WebkitMaskRepeat: "no-repeat",
-  maskPosition: "center",
-  WebkitMaskPosition: "center",
-} as const;
 
 export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();

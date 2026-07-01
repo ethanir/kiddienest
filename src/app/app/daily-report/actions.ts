@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { UPDATE_TITLE_BY_LABEL } from "@/lib/update-types";
 
 export type PostState = { error?: string; success?: string } | null;
 
@@ -21,12 +22,16 @@ export async function createUpdate(
 ): Promise<PostState> {
   const childId = String(formData.get("childId") ?? "");
   const type = String(formData.get("type") ?? "");
-  const title = String(formData.get("title") ?? "");
   const body = String(formData.get("body") ?? "").trim();
   const photo = formData.get("photo");
 
   if (!childId) return { error: "Select a child first." };
-  if (!type || !title) return { error: "Select an update type." };
+  // The title is derived server-side from the canonical type list. That both
+  // validates the type (unknown values are rejected, so the database only ever
+  // holds known update types) and stops a tampered form from writing an
+  // arbitrary headline onto the parent timeline.
+  const title = UPDATE_TITLE_BY_LABEL[type];
+  if (!title) return { error: "Select an update type." };
 
   const supabase = await createClient();
   const {

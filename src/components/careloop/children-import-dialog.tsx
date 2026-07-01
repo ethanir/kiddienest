@@ -25,24 +25,10 @@ import {
   type ImportChildInput,
 } from "@/app/app/children/actions";
 import { parseCsv, detectColumns, parseDate } from "@/lib/children-csv";
+import { AVATARS } from "@/lib/avatars";
 
 // Same friendly palette the manual "Add child" form uses, so imported kids get
 // consistent avatars.
-const AVATARS = [
-  { emoji: "😊", bg: "#fce7f3" },
-  { emoji: "🐻", bg: "#fef3c7" },
-  { emoji: "🦊", bg: "#ffedd5" },
-  { emoji: "🐰", bg: "#ede9fe" },
-  { emoji: "🐥", bg: "#fef9c3" },
-  { emoji: "🐸", bg: "#dcfce7" },
-  { emoji: "🐙", bg: "#dbeafe" },
-  { emoji: "🦄", bg: "#fae8ff" },
-  { emoji: "🐢", bg: "#ccfbf1" },
-  { emoji: "⭐", bg: "#ffe4e6" },
-  { emoji: "🐝", bg: "#fef08a" },
-  { emoji: "🦋", bg: "#e0f2fe" },
-];
-
 const TEMPLATE =
   "name,room,birthdate,allergies\n" +
   "Mia Johnson,Toddler Room,2022-04-15,Peanuts\n" +
