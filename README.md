@@ -114,7 +114,7 @@ Per-child conversation threads keep staff and parents in sync, with a familiar r
 
 ### Child and staff records
 
-**Children** — add and manage every child in your care: room, birthday, allergies, and a friendly emoji avatar. Link families with a simple email invite.
+**Children** — add and manage every child in your care: room, birthday, allergies, and a friendly emoji avatar. Find anyone instantly with name search and room filters, bulk-onboard a whole center with **CSV import** (validated, up to 1,000 rows), and link families with a simple email invite.
 
 <table>
   <tr>
@@ -131,7 +131,8 @@ Per-child conversation threads keep staff and parents in sync, with a familiar r
 
 - **Three roles** — Admin, Staff, and Parent, each with its own navigation and protected routes.
 - **Row-Level Security on every table** — the "a parent only sees their own child" rule lives in Postgres, not just the UI, so it holds even if someone hits the API directly.
-- **Middleware route protection** — sessions are refreshed on every request and users are gated to the right area for their role.
+- **Proxy route protection** — sessions are validated on every request (Next 16 `proxy.ts`), and one parallel query wave gates users to the right area for their role and their center's subscription state.
+- **Privileged actions via `SECURITY DEFINER` RPCs** — inviting staff, provisioning a daycare, acknowledging or deleting incidents, and other sensitive mutations re-check role and tenant *inside the database*.
 - **RLS-aware realtime** — instead of trusting data pushed over the socket, each live surface re-fetches through its own protected query when something changes. Realtime can never leak data it shouldn't, and the UI stays flicker-free.
 
 ## Tech stack
@@ -169,11 +170,11 @@ flowchart TD
 
 ## Running locally
 
-> Requires **Node.js 20+** and a **Supabase** project provisioned with the KiddieNest schema (tables, RLS policies, and RPCs).
+> Requires **Node.js 20+** and a **Supabase** project provisioned with the KiddieNest schema (tables, RLS policies, and `SECURITY DEFINER` RPCs — these live in Supabase, not this repo; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)).
 
 ```bash
-git clone https://github.com/ethanir/careloop.git
-cd careloop
+git clone https://github.com/ethanir/kiddienest.git
+cd kiddienest
 npm install
 ```
 
@@ -182,6 +183,13 @@ Create a `.env.local` file in the project root:
 ```ini
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Server-only (billing + webhook). Optional unless you are testing payments.
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_ID=price_...
 ```
 
 Then start the dev server and open **http://localhost:3000**:
@@ -190,13 +198,23 @@ Then start the dev server and open **http://localhost:3000**:
 npm run dev
 ```
 
+Quality checks (all must pass before shipping):
+
+```bash
+npm run typecheck && npm run lint && npm run build && npm run test:run
+```
+
 ## Roadmap
 
-- 📸 **Photo attachments** on daily updates (Supabase Storage)
+Photo attachments, the installable PWA, paid subscriptions, and full multi-tenant isolation have all shipped and are live. What's next:
+
+- 🔐 **Launch hardening** — email confirmation, stronger password policy, and secret rotation ahead of onboarding paying centers
+- 🚀 **Pilot readiness** — rooms/staff CSV import, error tracking, and database backups, then a full-scale run at a real daycare
+- 🗺️ **Floor-plan map** — a bird's-eye view of the center: click a room for its live roster, click a child for their profile
 - 📝 **Digital forms and e-signatures** for enrollment and permissions
-- 📱 **Installable PWA** — add KiddieNest to your home screen
-- 💳 **Paid sign-up for daycares** — a monthly subscription provisions a private admin account per daycare (no open self-serve admin registration)
-- 🏢 **Multi-daycare support** — full multi-tenant isolation so each center sees only its own children, staff, and families
+- 👨‍👩‍👧‍👦 **Multi-child families** — one parent account, every sibling
+
+The detailed plan lives in [ROADMAP.md](ROADMAP.md); the architecture deep-dive in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 

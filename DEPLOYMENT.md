@@ -20,20 +20,30 @@
 Email is already configured via Mailgun (MX + SPF + DKIM + DMARC), so we can send
 transactional email from @kiddienestapp.com (parent invites, confirmations, notifications).
 
-## When we deploy (planned)
-1. Host: Vercel (Next.js).
-2. Import the repo into Vercel; set the same env vars from .env.local (Supabase URL +
-   anon key, and the service-role key as a server-only secret).
-3. Point the domain at Vercel: add kiddienestapp.com (and www) in Vercel, then update
-   GoDaddy DNS to the exact values Vercel shows — change the A @ record off "WebsiteBuilder"
-   to Vercel's target and point www to Vercel. Leave the Mailgun MX/TXT records untouched.
-4. Supabase auth emails: point Supabase SMTP at Mailgun so confirmation/invite/reset
-   emails come from @kiddienestapp.com.
-5. Add https://kiddienestapp.com to Supabase Auth URL configuration (Site URL + redirects).
-6. PWA / "Add to Home Screen" so it installs like an app before any app store.
+## Live deployment (current)
+- **Host:** Vercel. Every push to `main` on `github.com/ethanir/kiddienest`
+  auto-builds and deploys to production. Branch pushes get preview URLs.
+- **Domain:** kiddienestapp.com (+ www) points at Vercel; the Mailgun MX/TXT
+  records above are untouched and email works.
+- **Env vars (set in Vercel, values never in the repo):**
+  `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (server-only, webhook),
+  `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`.
+- **Stripe webhook:** points at `https://kiddienestapp.com/api/stripe/webhook`
+  (live mode). If the endpoint or secret changes, update `STRIPE_WEBHOOK_SECRET`.
+- **Supabase:** free tier. Auth Site URL + redirects include
+  https://kiddienestapp.com. **No automated backups yet — known gap.**
+- **PWA:** installable ("Add to Home Screen") via the web manifest + install
+  prompt; the parent portal is the primary install target.
+- **Rollback:** use Vercel's instant rollback to a previous deployment, or
+  `git revert` the offending commit and push.
 
-## Before public launch
-- Turn email confirmation back ON (off for testing).
-- Decide: open sign-up (anyone can make a parent account but sees nothing until invited)
-  vs fully invite-only.
+## Before onboarding paying centers
+- Turn email confirmation back ON in Supabase Auth (off for testing) and
+  strengthen the password policy (keep the client/server minimum in sync).
+- Rotate the static admin-unlock code used by the `redeem_admin_code()` RPC.
+- Point Supabase SMTP at Mailgun so auth emails come from @kiddienestapp.com.
+- Set up database backups and lightweight error tracking.
+- Decide: open parent sign-up (account sees nothing until invited) vs fully
+  invite-only.
 - Verify the name once more: domain (owned), USPTO trademark, App Store + Play.

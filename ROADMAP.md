@@ -1,64 +1,78 @@
 # KiddieNest — Product Roadmap
 
 KiddieNest is a calm, simple daycare app: a private daily window for parents
-(check-ins, photos, meals, naps, notes) and an easy day-to-day tool for staff.
-Built first for one real daycare, designed to grow into a product other centers
-can use.
+(check-ins, photos, meals, naps, notes, incidents, messages) and an easy
+day-to-day tool for staff. Built first for one real daycare, now a live,
+multi-tenant product at **kiddienestapp.com** ($59/month per center).
 
 **Design principles:** calm and uncluttered, friendly for non-technical staff,
 trustworthy for parents, fast, and reliable. One clear thing per screen.
 
+*(Last updated: July 1, 2026. The single source of truth for open work is
+`KIDDIENEST_CONTEXT.md` §6; this file is the product-level view.)*
+
 ---
 
-## Shipped
-- **Accounts & security** — sign in / sign up, with a database security layer
-  (Row-Level Security) so a parent can only ever see their own child's info.
-- **Roles** — staff/admin vs. parent, each routed to the right home screen.
-- **Parent timeline** — each parent sees their child's real daily updates
-  (meals, naps, photos, notes), newest first.
-- **Daily reports** — staff post an update to a child; it appears on that
-  parent's timeline.
-- **Check-in / out** — staff mark each child checked in, out, or absent; status
-  and times are saved.
-- **Admin dashboard** — live attendance counts, the child roster with current
-  status, a recent-activity feed, and allergy alerts.
-- **Child profiles** — staff add and edit children in-app (name, room, birthday,
-  allergies, avatar).
+## Shipped and live in production
 
-## Next (toward real families using it)
-1. **Parent onboarding / linking** — a simple way for staff to invite a parent
-   and link them to their child (today this is done by hand in the database).
-2. **Role-gated navigation** — parents only ever see parent screens.
-3. **Messages** — real two-way messages between staff and a child's parents.
-4. **Incidents** — staff log an incident (bump, fall, etc.); the parent is
-   notified and can acknowledge.
-5. **Forms** — digital forms / permissions (field-trip consent, emergency info).
-6. **Photos** — real photo upload + private storage attached to updates.
-7. **Go live** — deploy to the web on your domain, plus "Add to Home Screen" so
-   it feels like an app before any App Store release.
+- **Accounts & security** — sign in / sign up, Row-Level Security on every table,
+  privileged actions via SECURITY DEFINER RPCs, role-gated routing, HTTP security
+  headers. Cross-tenant isolation verified with a live test harness.
+- **Multi-tenant SaaS with billing** — Stripe checkout, webhook-driven
+  provisioning with idempotency, subscription gating on every request, customer
+  portal, $59/month flat pricing.
+- **Three experiences** — Admin, Staff, and Parent, each routed to its own home.
+- **Check-in / out board** — tap to mark checked in / out / absent; optimistic,
+  correctly-ordered writes; live tallies; room chips + name search; Reset all.
+- **Admin dashboard** — live attendance counts, per-room enrolled/present with
+  staffing-ratio alerts, recent activity, allergy and unassigned counts.
+- **Daily updates** — six canonical types with a live parent preview; optional
+  photo attachments (private storage, signed URLs).
+- **Parent portal (installable PWA)** — live timeline, child profile, incident
+  acknowledgement, per-child messaging. Parents only ever see their own child.
+- **Incidents** — type, severity, time, narrative, action taken; parent
+  acknowledgement tracking; per-incident delete and confirmed Clear all.
+- **Messaging** — real-time per-child threads between staff and family.
+- **Records & onboarding** — children (with CSV bulk import, search, room
+  filter), rooms (capacity + ratios), staff invites and roles, parent invites
+  that auto-link on sign-up.
+- **Live everywhere** — Supabase Realtime with a secure re-fetch pattern; light
+  and dark themes; deployed on Vercel at a custom domain.
+- **July 2026 quality release** — full-codebase audit plus three batches:
+  request hot-path down to one parallel query wave, bounded history reads,
+  hardened Stripe webhook idempotency, cross-tenant write guards, shared design
+  tokens and canonical vocabularies, Next 16 proxy migration, O(n) hot loops.
+
+## Next (in order)
+
+1. **Security hardening before paying customers** — rotate the static
+   admin-unlock code, enable email confirmation, strengthen the password policy.
+2. **Pilot readiness** — rooms + staff CSV import, lightweight error
+   tracking/observability, sample parent logins, a backup story for the
+   database.
+3. **Run the pilot** — the family daycare at full scale, feeding real-world
+   feedback back into the product.
+
+## After the pilot
+
+- **Bird's-eye floor-plan map** (desktop) — a visual map of the center;
+  click a room to see its live roster, click a child to open their profile.
+- **Stripe billing polish** — richer plan/portal experience.
+- **Multi-child parent view** — families with more than one enrolled child.
+- **Forms & e-signatures** — replace the "Soon" placeholder with real digital
+  permissions (field trips, emergency info).
 
 ## Future ideas (need real-world input from the daycare)
-- **"Start the Day" arrivals board** (Ethan's idea — capture now, refine with mom)
-  - At the start of a day, the children expected that day appear as **pending**
-    and gently **pulse** to draw the eye.
-  - As each child arrives, staff tap to mark them **here** (turns green, stops
-    pulsing).
-  - Each child has an **"expected by" time** (custom per child, or a center-wide
-    default). If a child hasn't arrived by that time, their card escalates
-    (e.g. pulses amber) until staff mark them **arrived** or **absent**.
-  - Questions for mom: Do kids have set arrival windows? Same daily or per-day?
-    Should a late arrival notify the parent? When does the board reset for the
-    next day?
-  - When we build this, research how other daycare apps handle expected
-    attendance + late alerts so it feels familiar.
-- **Authorized pickup list** — who may collect each child (shown at checkout).
-- **Live updates** — timeline and attendance refresh without reloading.
-- **Reports & exports** — attendance summaries, daily-sheet PDFs.
 
-## Before public launch / SaaS
-- **Name check** — confirm KiddieNest is clear: kiddienest.com (domain), USPTO
-  trademark, App Store + Google Play.
-- **Email confirmation / invite-only sign-up** — sign-up is open for testing now.
-- **Audit log** — record sensitive actions (who checked a child in/out, who
-  viewed records).
-- **Billing** — if offered to other centers (subscriptions, invoicing).
+- **"Start the Day" arrivals board** (Ethan's idea — refine with mom)
+  - Children expected that day appear as **pending** and gently **pulse**.
+  - Staff tap as each child arrives (turns green, stops pulsing).
+  - Per-child **"expected by" time**; overdue cards escalate (pulse amber)
+    until marked arrived or absent.
+  - Questions for mom: set arrival windows? same daily or per-day? notify the
+    parent on late arrival? when does the board reset?
+- **Authorized pickup list** — who may collect each child (shown at checkout).
+- **Reports & exports** — attendance summaries, daily-sheet PDFs.
+- **Audit log** — who checked a child in/out, who viewed records.
+- **Native iOS app** — a Capacitor wrapper of the parent PWA exists but is
+  parked (stalled at the Xcode simulator); revisit after the pilot.

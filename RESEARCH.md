@@ -1,3 +1,5 @@
+> **Historical note (July 2026):** this file predates the rename to **KiddieNest** and is kept for reference. "CareLoop" was the working name; the product shipped as KiddieNest at kiddienestapp.com. Do not treat anything here as current.
+
 # CareLoop Product Research Notes
 
 CareLoop is not trying to copy one specific app or one specific GitHub repository. The goal is to study existing childcare, school, attendance, messaging, and business workflow systems, then build a clean product that fits a real daycare.
