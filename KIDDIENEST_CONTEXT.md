@@ -100,10 +100,11 @@ Env var names (values live in Vercel/`.env.local`, never in the repo):
 - **July 2 perf/nav release** (branch `dev-perf-nav`): navigation hot path now
   verifies identity from the JWT — `getClaims()` in the proxy and in
   `getCurrentUser()` (which returns `{ id, email }`), with `daily-report` and
-  `inviteParent` moved onto the cached helper. Once the signing keys are rotated
-  (runbook: DEPLOYMENT.md) every navigation drops its auth-server round trips;
-  until then behavior is byte-identical to `getUser()`. Also: 30 s dynamic
-  client router cache (`experimental.staleTimes`) for instant tab
+  `inviteParent` moved onto the cached helper. The project's signing keys were
+  discovered to be **already asymmetric** (current key ECC P-256, rotated
+  ~June 2026), so local verification went live with this very deploy — every
+  navigation dropped its auth-server round trips immediately. Also: 30 s
+  dynamic client router cache (`experimental.staleTimes`) for instant tab
   back-and-forth, and infra moved compute next to the data — Vercel function
   region **Cleveland (cle1)** beside Supabase `us-east-2`, Fluid Compute on.
 - **The July 1 audit release (`035701e`)** = the previous feature-complete app
@@ -135,7 +136,9 @@ Env var names (values live in Vercel/`.env.local`, never in the repo):
     count, and a no-match empty state.
 - **Already handled** (do not re-raise as open): HTTP security headers in
   `next.config.ts`; postcss advisory cleared via override; incident deletion RPCs;
-  children CSV import; sticky list-page headers; theme toggle in sidebar.
+  children CSV import; sticky list-page headers; theme toggle in sidebar;
+  **asymmetric JWT signing keys** (current key ECC P-256, legacy HS256 in
+  "Previously used" — deliberately NOT revoked; see DEPLOYMENT.md).
 - **iOS/Capacitor app: PARKED.** Setup exists in a separate folder
   (`~/dev/kiddienest-ios`, Capacitor 8, wrapping `/app/parent`) but stalled at the
   Xcode simulator. **Do not resume unless Ethan explicitly asks.**
@@ -143,16 +146,14 @@ Env var names (values live in Vercel/`.env.local`, never in the repo):
 ## 6. Open items (the real to-do list)
 
 **Security hardening (medium priority, before paying customers):**
-1. Rotate to **asymmetric JWT signing keys** (runbook: DEPLOYMENT.md) — flips
-   `getClaims()` to local verification and removes the auth-server round trips
-   from every navigation. Do NOT revoke the legacy secret (see runbook).
-2. Rotate the static admin-unlock code used by `redeem_admin_code()` (value lives in
+1. Rotate the static admin-unlock code used by `redeem_admin_code()` (value lives in
    the DB function, not the repo).
-3. Enable email confirmation in Supabase Auth (currently off for testing).
-4. Strengthen the Supabase password policy — and keep the client/server minimum
+2. Enable email confirmation in Supabase Auth (currently off for testing).
+3. Strengthen the Supabase password policy — and keep the client/server minimum
    (currently 6, in `src/app/login/`) in sync when you do.
-5. Later, deliberate: migrate the env keys to `sb_publishable_...` /
-   `sb_secret_...`, then (and only then) revoke the legacy JWT secret.
+4. Later, deliberate: migrate the env keys to `sb_publishable_...` /
+   `sb_secret_...`, then (and only then) revoke the legacy HS256 secret still
+   listed under "Previously used keys".
 
 **Pilot readiness (before the family daycare runs at full scale):**
 4. CSV import for **rooms and staff** (children import already shipped).

@@ -43,31 +43,21 @@ transactional email from @kiddienestapp.com (parent invites, confirmations, noti
 - **Rollback:** use Vercel's instant rollback to a previous deployment, or
   `git revert` the offending commit and push.
 
-## JWT signing keys (asymmetric) — rotation runbook
-The app verifies user identity from the JWT via `getClaims()` (proxy +
-`src/lib/auth.ts`). Until asymmetric keys are active this transparently falls
-back to server-side verification (same speed as before); once rotated,
-verification is local and every navigation drops its auth-server round trips.
-Zero-downtime, done in the dashboard:
+## JWT signing keys (asymmetric) — STATUS: DONE
+Discovered July 2, 2026: this project already runs on asymmetric signing keys.
+Current key: **ECC (P-256)**; the legacy **HS256 shared secret** sits under
+"Previously used keys" (rotated ~June 2026) and **must stay un-revoked** — the
+legacy `anon` + `service_role` env keys are themselves JWTs signed by it, so
+revoking it breaks the whole app. Revocation only becomes possible after a
+separate, deliberate migration to `sb_publishable_...` / `sb_secret_...` API
+keys (tracked in KIDDIENEST_CONTEXT.md §6). Because the keys are asymmetric,
+`getClaims()` (proxy + `src/lib/auth.ts`) verifies every request's JWT locally
+against the cached public keys — zero auth-server round trips per navigation.
 
-1. Supabase Dashboard → **Project Settings → JWT Keys** → click
-   **Migrate JWT secret**. This imports the legacy secret into the new system
-   and creates a **standby** asymmetric key (ECC). Nothing changes yet.
-2. Click **Rotate keys**. New sign-ins now get tokens signed with the new
-   private key; the legacy secret moves to "Previously used keys".
-   Per Supabase: the legacy `anon` / `service_role` API keys and every
-   existing non-expired session **remain valid** through this step.
-3. **Do NOT click "Revoke" on the previously-used legacy secret.** Our env
-   still uses the legacy `anon` + `service_role` keys, which are themselves
-   JWTs signed by that secret — revoking it breaks the whole app. Revocation
-   only becomes possible after a separate, deliberate migration to the new
-   `sb_publishable_...` / `sb_secret_...` API keys (tracked in
-   KIDDIENEST_CONTEXT.md §6).
-4. Existing sessions keep verifying server-side until they refresh (≤1 h) or
-   the user signs out/in; new sessions verify locally immediately.
-
-Rollback: keys can be rotated back from the same page; nothing is revoked, so
-there is no destructive step in this runbook.
+For a FUTURE rotation (e.g. suspected key compromise), zero-downtime from the
+same dashboard page: **Create Standby Key** → wait for it to be picked up →
+**Rotate keys** (existing sessions and legacy API keys remain valid) → never
+revoke a previous key while anything still verifies against it.
 
 ## Before onboarding paying centers
 - Turn email confirmation back ON in Supabase Auth (off for testing) and
