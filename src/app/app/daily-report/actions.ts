@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+
+import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { UPDATE_TITLE_BY_LABEL } from "@/lib/update-types";
 
@@ -34,9 +36,8 @@ export async function createUpdate(
   if (!title) return { error: "Select an update type." };
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Identity from the verified JWT (cached per request) — see src/lib/auth.ts.
+  const user = await getCurrentUser();
   if (!user) return { error: "Your session expired. Please sign in again." };
 
   // Resolve the child's daycare so the storage path encodes ownership:

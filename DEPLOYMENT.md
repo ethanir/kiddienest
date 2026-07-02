@@ -23,6 +23,11 @@ transactional email from @kiddienestapp.com (parent invites, confirmations, noti
 ## Live deployment (current)
 - **Host:** Vercel. Every push to `main` on `github.com/ethanir/kiddienest`
   auto-builds and deploys to production. Branch pushes get preview URLs.
+- **Function region: Cleveland (cle1)** — set July 2026 (Project → Settings →
+  Functions) to sit next to the Supabase project in AWS `us-east-2`; Fluid
+  Compute is on. Keep compute and database co-located if either ever moves.
+  Verify with `curl -sI https://kiddienestapp.com/ | grep -i x-vercel-id`
+  (the second code is the function region).
 - **Domain:** kiddienestapp.com (+ www) points at Vercel; the Mailgun MX/TXT
   records above are untouched and email works.
 - **Env vars (set in Vercel, values never in the repo):**
@@ -37,6 +42,32 @@ transactional email from @kiddienestapp.com (parent invites, confirmations, noti
   prompt; the parent portal is the primary install target.
 - **Rollback:** use Vercel's instant rollback to a previous deployment, or
   `git revert` the offending commit and push.
+
+## JWT signing keys (asymmetric) — rotation runbook
+The app verifies user identity from the JWT via `getClaims()` (proxy +
+`src/lib/auth.ts`). Until asymmetric keys are active this transparently falls
+back to server-side verification (same speed as before); once rotated,
+verification is local and every navigation drops its auth-server round trips.
+Zero-downtime, done in the dashboard:
+
+1. Supabase Dashboard → **Project Settings → JWT Keys** → click
+   **Migrate JWT secret**. This imports the legacy secret into the new system
+   and creates a **standby** asymmetric key (ECC). Nothing changes yet.
+2. Click **Rotate keys**. New sign-ins now get tokens signed with the new
+   private key; the legacy secret moves to "Previously used keys".
+   Per Supabase: the legacy `anon` / `service_role` API keys and every
+   existing non-expired session **remain valid** through this step.
+3. **Do NOT click "Revoke" on the previously-used legacy secret.** Our env
+   still uses the legacy `anon` + `service_role` keys, which are themselves
+   JWTs signed by that secret — revoking it breaks the whole app. Revocation
+   only becomes possible after a separate, deliberate migration to the new
+   `sb_publishable_...` / `sb_secret_...` API keys (tracked in
+   KIDDIENEST_CONTEXT.md §6).
+4. Existing sessions keep verifying server-side until they refresh (≤1 h) or
+   the user signs out/in; new sessions verify locally immediately.
+
+Rollback: keys can be rotated back from the same page; nothing is revoked, so
+there is no destructive step in this runbook.
 
 ## Before onboarding paying centers
 - Turn email confirmation back ON in Supabase Auth (off for testing) and

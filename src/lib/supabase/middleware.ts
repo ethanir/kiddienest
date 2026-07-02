@@ -39,22 +39,30 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // IMPORTANT: do not run other code between creating the client and getUser().
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // IMPORTANT: do not run other code between creating the client and getClaims().
+  // getClaims() verifies the JWT and returns its claims. With asymmetric signing
+  // keys active (see DEPLOYMENT.md), verification happens locally against the
+  // project's cached public keys (JWKS) — no auth-server round trip on this
+  // hottest of paths. Before the keys are rotated it transparently falls back to
+  // server-side verification (identical to the old getUser call), and either way
+  // it still refreshes the session cookie when the access token is about to
+  // expire, so the proxy keeps its refresh duty. Identity comes from the
+  // verified token; authorization stays live in RLS, so a revoked user's
+  // leftover token still can't read a row.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub ?? null;
 
   const pathname = request.nextUrl.pathname;
 
   // Signed-out users trying to open the app -> send to login.
-  if (!user && pathname.startsWith("/app")) {
+  if (!userId && pathname.startsWith("/app")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
   // Already signed in but sitting on /login -> send into the app.
-  if (user && pathname === "/login") {
+  if (userId && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/app";
     return NextResponse.redirect(url);
@@ -68,7 +76,7 @@ export async function updateSession(request: NextRequest) {
   // (at most one row — the same proven pattern billing.ts and the admin
   // dashboard already rely on), which avoids waiting on the profile for its
   // daycare_id. The locked screen does its own checks, so it skips all of this.
-  if (user && pathname.startsWith("/app")) {
+  if (userId && pathname.startsWith("/app")) {
     const onBilling =
       pathname === "/app/locked" || pathname.startsWith("/app/locked/");
 
@@ -77,7 +85,7 @@ export async function updateSession(request: NextRequest) {
         supabase
           .from("profiles")
           .select("role, daycare_id, intended_role")
-          .eq("id", user.id)
+          .eq("id", userId)
           .maybeSingle(),
         supabase.from("daycares").select("subscription_status").maybeSingle(),
       ]);

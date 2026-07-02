@@ -6,8 +6,8 @@ this one file and understand what the project is, exactly where it stands, how i
 built, and how to work on it without breaking anything. When in doubt, trust this file
 and the code over memory or assumptions.
 
-**Last updated:** July 1, 2026 — immediately after the "batches 1–3" audit release
-(`main` @ `035701e`).
+**Last updated:** July 2, 2026 — after the perf/nav release (getClaims identity,
+30 s router cache, cle1 function region).
 
 ---
 
@@ -71,9 +71,13 @@ Env var names (values live in Vercel/`.env.local`, never in the repo):
   `provision_daycare_for_user`, `redeem_admin_code`, `revoke_staff`,
   `set_subscription_status`.
 - **Request path:** `src/proxy.ts` → `updateSession()` in
-  `src/lib/supabase/middleware.ts` refreshes the session and runs role + billing
-  gating with **one parallel DB wave** (profile + RLS-scoped daycare). Matcher:
-  `/app/:path*` and `/login` only.
+  `src/lib/supabase/middleware.ts` verifies identity from the JWT via
+  `getClaims()` (local against cached public keys once asymmetric signing keys
+  are rotated — runbook in DEPLOYMENT.md; server-verified fallback before then),
+  refreshes the session, and runs role + billing gating with **one parallel DB
+  wave** (profile + RLS-scoped daycare). Matcher: `/app/:path*` and `/login`
+  only. `getCurrentUser()` returns `{ id, email }` from the same verified
+  claims; login/checkout/billing deliberately keep auth-server `getUser()`.
 - **Reads** in Server Components; **writes** in Server Actions; **live sync** via
   Supabase Realtime with a debounced "re-fetch through your own RLS query" pattern
   (never trust the socket payload).
@@ -90,11 +94,21 @@ Env var names (values live in Vercel/`.env.local`, never in the repo):
 
 ## 5. Current state (as of July 1, 2026)
 
-- **Branches:** exactly two — `main` (production, `035701e`) and `dev` (Ethan's own
+- **Branches:** exactly two — `main` (production) and `dev` (Ethan's own
   separate work; **do not touch or delete it** without his explicit say-so). All
   other dev branches were deleted after the audit release.
-- `main` @ `035701e` = the previous feature-complete app (`755fd14`) **plus the full
-  three-batch audit release** (one combined commit, 45 files changed):
+- **July 2 perf/nav release** (branch `dev-perf-nav`): navigation hot path now
+  verifies identity from the JWT — `getClaims()` in the proxy and in
+  `getCurrentUser()` (which returns `{ id, email }`), with `daily-report` and
+  `inviteParent` moved onto the cached helper. Once the signing keys are rotated
+  (runbook: DEPLOYMENT.md) every navigation drops its auth-server round trips;
+  until then behavior is byte-identical to `getUser()`. Also: 30 s dynamic
+  client router cache (`experimental.staleTimes`) for instant tab
+  back-and-forth, and infra moved compute next to the data — Vercel function
+  region **Cleveland (cle1)** beside Supabase `us-east-2`, Fluid Compute on.
+- **The July 1 audit release (`035701e`)** = the previous feature-complete app
+  (`755fd14`) **plus the full three-batch audit release** (one combined commit,
+  45 files changed):
   - **Batch 1 — hot path & correctness:** proxy/middleware collapsed to one parallel
     query wave per request; request-cached `getCurrentUser` deduping auth calls;
     admin dashboard, staff page, `getStaff`, `shapeIncidents`, and `sendMessage`
@@ -129,11 +143,16 @@ Env var names (values live in Vercel/`.env.local`, never in the repo):
 ## 6. Open items (the real to-do list)
 
 **Security hardening (medium priority, before paying customers):**
-1. Rotate the static admin-unlock code used by `redeem_admin_code()` (value lives in
+1. Rotate to **asymmetric JWT signing keys** (runbook: DEPLOYMENT.md) — flips
+   `getClaims()` to local verification and removes the auth-server round trips
+   from every navigation. Do NOT revoke the legacy secret (see runbook).
+2. Rotate the static admin-unlock code used by `redeem_admin_code()` (value lives in
    the DB function, not the repo).
-2. Enable email confirmation in Supabase Auth (currently off for testing).
-3. Strengthen the Supabase password policy — and keep the client/server minimum
+3. Enable email confirmation in Supabase Auth (currently off for testing).
+4. Strengthen the Supabase password policy — and keep the client/server minimum
    (currently 6, in `src/app/login/`) in sync when you do.
+5. Later, deliberate: migrate the env keys to `sb_publishable_...` /
+   `sb_secret_...`, then (and only then) revoke the legacy JWT secret.
 
 **Pilot readiness (before the family daycare runs at full scale):**
 4. CSV import for **rooms and staff** (children import already shipped).

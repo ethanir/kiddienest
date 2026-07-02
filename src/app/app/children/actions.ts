@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getCurrentRole } from "@/lib/auth";
+import { getCurrentRole, getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { rlsError } from "@/lib/supabase/errors";
 
@@ -181,13 +181,14 @@ export async function inviteParent(
   if (!value) return { error: "Enter the parent's email." };
 
   const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
+  // Identity from the verified JWT (cached per request) — see src/lib/auth.ts.
+  const user = await getCurrentUser();
 
   const { error } = await supabase.from("guardian_invites").insert({
     child_id: childId,
     email: value,
     relationship: "Parent",
-    invited_by: auth.user?.id ?? null,
+    invited_by: user?.id ?? null,
   });
 
   if (error) {

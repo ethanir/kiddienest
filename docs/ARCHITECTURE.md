@@ -33,8 +33,15 @@ rename of `middleware.ts`; the exported function is `proxy`). It delegates to
 `updateSession()` in `src/lib/supabase/middleware.ts`, which does, in order:
 
 1. Creates a Supabase server client bound to the request cookies and calls
-   `auth.getUser()` — this **validates the JWT against Supabase Auth** (unlike
-   `getSession()`, which trusts the cookie and is spoofable; we never use it).
+   `auth.getClaims()` — this **cryptographically verifies the JWT** and reads the
+   user id from its claims. With asymmetric signing keys active (see
+   DEPLOYMENT.md), verification happens locally against the project's cached
+   public keys (JWKS) — zero auth-server round trips on the hottest path in the
+   app; before the keys are rotated it transparently falls back to server-side
+   verification. It also refreshes the session cookie when the access token is
+   about to expire. (`getSession()` trusts the cookie and is spoofable; we never
+   use it. Identity comes from the verified token; authorization stays live in
+   RLS, so a revoked user's leftover token still can't read a row.)
 2. No user + `/app/*` → redirect to `/login`. User + `/login` → redirect to `/app`.
 3. For a signed-in user on any `/app` path except `/app/locked`, it fires **one
    parallel wave** of two queries: the caller's `profiles` row
@@ -56,12 +63,17 @@ After the proxy, `/app/page.tsx` routes by role (`admin`/`staff` → `/app/admin
 
 `src/lib/auth.ts` exports two request-cached helpers (React `cache()`):
 
-- `getCurrentUser()` — the validated user, **one auth round trip per server request**
-  no matter how many callers (layout, page, actions) need it.
+- `getCurrentUser()` — the signed-in user's identity (`{ id, email }`) from their
+  **verified JWT** via `getClaims()`: with asymmetric signing keys this is a local
+  cryptographic check (no auth-server round trip), and it's **one verification per
+  server request** no matter how many callers (layout, page, actions) need it.
 - `getCurrentRole()` — reads `profiles.role` through `getCurrentUser()`.
 
-Rule: inside pages and actions, use these instead of calling
-`supabase.auth.getUser()` directly, or you reintroduce duplicate auth calls.
+Rule: inside pages and actions, use these instead of calling `supabase.auth`
+directly, or you reintroduce duplicate auth work. Deliberate exceptions that keep
+the auth-server `getUser()`: the login flow, `checkout.ts`, and `billing.ts` —
+rare, once-per-flow paths where a fresh server-confirmed user record is worth the
+round trip.
 
 ## 4. Multi-tenancy and RLS, from scratch
 
@@ -199,6 +211,16 @@ is why history queries are bounded (timeline 50, messages 200).
    confirmed row is available (check-in taps).
 7. The proxy is the hottest path — treat every query added there as a tax on every
    navigation.
+8. Identity comes from the verified JWT (`getClaims()` via `getCurrentUser()`),
+   not from auth-server lookups; reserve `getUser()` for the rare flows that
+   need a fresh user record (login, checkout, billing).
+9. The client router cache keeps dynamic pages for 30 s
+   (`experimental.staleTimes` in `next.config.ts`), so tab back-and-forth is
+   instant; realtime re-syncs live surfaces regardless, and `router.refresh()`
+   bypasses the cache.
+10. Compute lives next to the data: the Vercel function region is **Cleveland
+    (cle1)**, matching the Supabase project in AWS `us-east-2` — keep them
+    co-located if either ever moves (see DEPLOYMENT.md).
 
 ## 11. Design system
 

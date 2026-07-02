@@ -30,6 +30,16 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  experimental: {
+    // Client router cache for dynamic pages (Next's default is 0s, so even a
+    // tab you left two seconds ago refetches everything). 30s makes
+    // back-and-forth tab switching instant. Safe here: realtime subscriptions
+    // re-sync every live surface on change, and router.refresh() (used by the
+    // dashboard's realtime-refresh) bypasses this cache entirely.
+    staleTimes: {
+      dynamic: 30,
+    },
+  },
   async headers() {
     return [
       {
